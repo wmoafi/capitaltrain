@@ -1,0 +1,4 @@
+@echo off
+title Tafawuq Cloudflare Tunnel
+cd /d I:\n8n
+cloudflared.exe tunnel run --token eyJhIjoiNTQ2OTYxZmQzNTNjY2ViM2QyMmQ1MjFjNzY2YTQ0MDYiLCJ0IjoiYTlmOGE2ZmQtZTQ3MC00MjAxLTgyZmQtOWFjNmFmYjg2ZDAxIiwicyI6Ill6QTRORE0xTWpZdE9URmtOQzAwWkRBMUxUZzFNbVF0WlRVMU1EQmtZak5oWmpCaSJ9 --no-autoupdate

@@ -1,0 +1,2437 @@
+# -*- coding: utf-8 -*-
+"""
+Rebuild complete index.html with:
+1) Departure options:
+   - [أنا في المترو الآن]: Takes exact current minute.
+   - [سأركب المترو القادم]: Fetches the live next incoming train at this station from Mobility Cairo.
+   - [في وقت لاحق]: Displays the interactive time picker.
+2) Complete 12-hour format with AM/PM (م و ص) across ALL times:
+   - Metro departure
+   - Adly arrival
+   - Platform ready
+   - LRT departure
+   - Final arrival
+   - Alternative train in tip box
+3) Bigger fonts & stylish uniform responsive card blocks:
+   - Grid with equal height, clean borders, generous padding, font-extrabold/black numbers, clear badges.
+   - Larger font in information tip box.
+"""
+import json
+
+with open('I:/CapitalTrain/metro_line3_official_stops.json', 'r', encoding='utf-8') as f:
+    metro_stops = json.load(f)
+
+for s in metro_stops:
+    if s.get('branch') == 'main':
+        s['pos'] = s['order'] - 1
+    elif s.get('branch') == 'rod_elfarag':
+        s['pos'] = 22 + (s['order'] - 23)
+    elif s.get('branch') == 'cairo_univ':
+        s['pos'] = 30 + (s['order'] - 23)
+
+metro_stops_json_str = json.dumps(metro_stops, ensure_ascii=False, indent=2)
+
+html_content = f'''<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شبكة النقل الذكية - قطار العاصمة الكهربائي ومترو الخط الثالث الأخضر</title>
+  
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="شبكة النقل الذكية">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  
+  <!-- Tailwind CSS CDN with dark mode class support -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {{
+      darkMode: 'class',
+      theme: {{
+        extend: {{
+          colors: {{
+            brand: {{
+              50: '#f0fdfa',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            }}
+          }}
+        }}
+      }}
+    }}
+  </script>
+  
+  <!-- Cairo Font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    body {{
+      font-family: 'Cairo', sans-serif;
+    }}
+    /* White timer clock indicator */
+    input[type="time"]::-webkit-calendar-picker-indicator {{
+      filter: invert(1) brightness(1.8) contrast(1.2);
+      cursor: pointer;
+    }}
+  </style>
+  <!-- html2canvas for card image export & sharing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-12 transition-colors duration-200">
+
+  <!-- Navbar / Header -->
+  <header class="bg-gradient-to-l from-teal-800 via-teal-700 to-sky-800 dark:from-slate-900 dark:via-teal-950 dark:to-slate-900 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-white/10 dark:bg-white/5 rounded-xl backdrop-blur-sm border border-white/20">
+          <i id="header-logo-icon" data-lucide="train" class="w-6 h-6 text-amber-300"></i>
+        </div>
+        <div>
+          <h1 id="header-title" class="font-extrabold text-base sm:text-xl tracking-tight leading-none">قطار العاصمة الكهربائي</h1>
+        </div>
+      </div>
+      
+      <!-- Right Controls: APK Download + PWA Install + Telegram Bot + Admin Link + Dark Mode + Clock -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <a href="./downloads/capital_train_lrt.apk" download="capital_train_lrt.apk" class="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-400/40 text-xs font-bold transition shadow-xs" title="تنزيل تطبيق الأندرويد المباشر (APK)">
+          <i data-lucide="smartphone" class="w-4 h-4 text-emerald-200"></i>
+          <span class="hidden md:inline">تحميل APK</span>
+        </a>
+
+        <button id="btn-pwa-install" class="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-sky-600/90 hover:bg-sky-500 text-white border border-sky-400/40 text-xs font-bold transition shadow-xs" title="تثبيت الموقع كتطبيق من المتصفح مباشرة">
+          <i data-lucide="download" class="w-4 h-4 text-sky-200"></i>
+          <span class="hidden md:inline">تثبيت الموقع</span>
+        </button>
+
+        <a href="https://t.me/trainlrt_Bot" target="_blank" class="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-purple-600/90 hover:bg-purple-500 text-white border border-purple-400/40 text-xs font-bold transition shadow-xs" title="فتح بوت شبكة النقل على التلجرام">
+          <i data-lucide="send" class="w-4 h-4 text-purple-200"></i>
+          <span class="hidden md:inline">بوت التلجرام</span>
+        </a>
+
+        <a href="admin.html" class="p-2 rounded-xl bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 text-white border border-white/10 transition shadow-xs flex items-center justify-center" title="لوحة تحكم وإحصائيات الإدمن">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 text-teal-300"></i>
+        </a>
+
+        <button id="btn-theme-toggle" class="p-2 rounded-xl bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 text-white border border-white/10 transition shadow-xs flex items-center justify-center" title="التبديل بين الوضع الليلي والنهاري">
+          <i id="theme-icon" data-lucide="moon" class="w-4 h-4 text-amber-300"></i>
+        </button>
+
+        <div class="hidden sm:flex items-center gap-1.5 bg-black/25 px-2.5 py-1.5 rounded-full border border-white/10 text-xs">
+          <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping inline-block"></span>
+          <span id="current-clock" class="font-mono font-bold text-xs">--:--</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 mt-4 space-y-5">
+
+    <!-- Service Switcher (LRT vs Metro Line 3) -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-2 shadow-sm border border-slate-200/80 dark:border-slate-800">
+      <div class="grid grid-cols-2 gap-2">
+        <button id="tab-lrt" onclick="switchNetworkMode('lrt')" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all duration-200 shadow-sm bg-gradient-to-l from-teal-700 to-sky-700 text-white ring-2 ring-teal-500/30">
+          <i data-lucide="train" class="w-5 h-5 text-amber-300"></i>
+          <span>قطار العاصمة الكهربائي</span>
+        </button>
+        <button id="tab-metro" onclick="switchNetworkMode('metro')" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all duration-200 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="subway" class="w-5 h-5 text-emerald-500"></i>
+          <span>مترو الخط الثالث الأخضر</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- HERO CARD: Smart Transfer Guarantee - هل هلحق قطار العاصمة من المترو؟ -->
+    <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-teal-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-indigo-500/30 relative overflow-hidden">
+      <div class="absolute -left-10 -bottom-10 w-44 h-44 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <span class="p-2 bg-amber-400/20 text-amber-300 rounded-xl border border-amber-400/30">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+          </span>
+          <div>
+            <h2 id="transfer-card-title" class="font-black text-base sm:text-lg tracking-tight flex items-center gap-2">
+              <span>حاسبة الربط وضمان اللحاق بالقطار التبادلي</span>
+            </h2>
+            <p id="transfer-card-subtitle" class="text-xs text-slate-300">احسب توقيت التبديل بدقة في محطة عدلي منصور التبادلية في كلا الاتجاهين</p>
+          </div>
+        </div>
+        
+        <!-- Direction Switcher (Metro -> LRT vs LRT -> Metro) -->
+        <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10 text-xs">
+          <button id="btn-transfer-dir-m2l" onclick="setTransferDirection('metro_to_lrt')" class="px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-amber-400 text-slate-950 shadow-sm">
+            <span>🚇 المترو ⬅️ القطار LRT</span>
+          </button>
+          <button id="btn-transfer-dir-l2m" onclick="setTransferDirection('lrt_to_metro')" class="px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 text-slate-300 hover:text-white">
+            <span>🚆 القطار LRT ⬅️ المترو</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Departure State Mode Selectors: 3 Smart Options -->
+      <div class="mt-4">
+        <label class="block text-xs font-bold text-slate-300 mb-1.5">⏱️ اختر حالة ركوبك الحالية للمترو:</label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <!-- Option 1: In the Metro Now -->
+          <button id="opt-mode-now" onclick="setTransferTimingMode('now')" class="py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-amber-400 text-slate-950 border-amber-300 shadow-sm">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <span>أنا في المترو الآن (بالدقيقة الحالية)</span>
+          </button>
+
+          <!-- Option 2: Will take next incoming train -->
+          <button id="opt-mode-next" onclick="setTransferTimingMode('next')" class="py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500">
+            <i data-lucide="train" class="w-4 h-4 text-emerald-400"></i>
+            <span>سأركب المترو القادم (استدعاء الموعد حياً)</span>
+          </button>
+
+          <!-- Option 3: Later custom time -->
+          <button id="opt-mode-later" onclick="setTransferTimingMode('later')" class="py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500">
+            <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i>
+            <span>في وقت لاحق (تحديد توقيت يدوي)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Station Dropdowns & Optional Later Time Box -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 mt-3.5 items-end">
+        <!-- 1. Metro Current Station -->
+        <div id="col-metro-station" class="md:col-span-5">
+          <label id="lbl-transfer-start" class="block text-xs font-bold text-slate-300 mb-1">🚇 محطة القيام الحالية (المترو):</label>
+          <div class="relative">
+            <select id="transfer-metro-station" class="w-full bg-slate-800/90 border border-slate-700 text-white text-sm font-bold rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 focus:outline-none appearance-none">
+            </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none"></i>
+          </div>
+        </div>
+
+        <!-- 2. Destination LRT Station -->
+        <div id="col-lrt-station" class="md:col-span-5">
+          <label class="block text-xs font-bold text-slate-300 mb-1">🚆 وجهتك في قطار العاصمة الكهربائي:</label>
+          <div class="relative">
+            <select id="transfer-lrt-station" class="w-full bg-slate-800/90 border border-slate-700 text-white text-sm font-bold rounded-xl p-3 focus:ring-2 focus:ring-teal-400 focus:outline-none appearance-none">
+            </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none"></i>
+          </div>
+        </div>
+
+        <!-- 3. Time Box (Shown only when 'later' is selected) -->
+        <div id="container-transfer-time" class="hidden md:col-span-2">
+          <label class="block text-xs font-bold text-slate-300 mb-1">⏰ الوقت المطلوب:</label>
+          <input type="time" id="transfer-input-time" class="w-full bg-slate-800/90 border border-slate-700 text-white text-sm font-mono font-bold rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+        </div>
+
+        <!-- 4. Action Button -->
+        <div id="col-transfer-btn" class="md:col-span-2">
+          <button id="btn-calc-transfer" class="w-full h-[48px] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm rounded-xl transition shadow-md flex items-center justify-center gap-1.5">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>احسب اللحاق</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Result Card Container -->
+      <div id="transfer-result-container" class="mt-4">
+      </div>
+    </div>
+
+    <!-- Card 1: Station, Direction & Time Selection with PINNING -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 transition-colors">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 rounded-lg">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+          </span>
+          <h2 class="font-bold text-slate-800 dark:text-slate-100 text-base">محطة الركوب والمسار المباشر</h2>
+        </div>
+        <div id="badge-network-name" class="text-xs text-slate-400 dark:text-slate-500 font-bold">LRT - مصر</div>
+      </div>
+
+      <!-- Quick Favorites Bar -->
+      <div class="mt-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="text-slate-500 dark:text-slate-400 text-xs font-bold flex items-center gap-1">
+            <i data-lucide="bookmark" class="w-3.5 h-3.5 text-amber-500"></i>
+            تثبيتات سريعة ومفضلة:
+          </span>
+          <button id="btn-open-modal-preset" class="text-xs font-bold text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 flex items-center gap-1 bg-sky-50 dark:bg-sky-950/50 px-2.5 py-1 rounded-lg border border-sky-200 dark:border-sky-800 transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            حفظ الاختيار الحالي كتثبيت سريع
+          </button>
+        </div>
+        <div id="presets-list" class="flex flex-wrap items-center gap-2 text-xs">
+        </div>
+      </div>
+
+      <!-- Station / Direction / Time Controls -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 mt-4 items-end">
+        <div class="md:col-span-4">
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">🟢 محطة القيام (الانطلاق):</label>
+          <div class="relative">
+            <select id="select-station" class="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm font-bold rounded-xl p-3 focus:ring-2 focus:ring-sky-500 focus:outline-none appearance-none">
+            </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none"></i>
+          </div>
+        </div>
+
+        <div class="md:col-span-4">
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">🔴 محطة الوصول:</label>
+          <div class="relative">
+            <select id="select-dest-station" class="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm font-bold rounded-xl p-3 focus:ring-2 focus:ring-teal-500 focus:outline-none appearance-none">
+            </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none"></i>
+          </div>
+          <div class="mt-1.5 flex items-center justify-start">
+            <span id="auto-dir-badge" class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 flex items-center gap-1.5 shadow-2xs">
+              🧭 اتجاه عدلي منصور
+            </span>
+          </div>
+        </div>
+
+        <div class="md:col-span-2">
+          <div class="mb-1 flex items-center justify-between">
+            <button id="btn-use-now" class="text-xs text-sky-600 dark:text-sky-400 font-bold hover:underline flex items-center gap-1 whitespace-nowrap" title="ضبط التوقيت على اللحظة الحالية">
+              <i data-lucide="clock" class="w-3.5 h-3.5 flex-shrink-0"></i>
+              <span>استخدام الوقت الحالي</span>
+            </button>
+          </div>
+          <input type="time" id="input-time" class="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm font-mono font-bold rounded-xl p-2.5 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+        </div>
+
+        <div class="md:col-span-2">
+          <button id="btn-pin-prefs" class="w-full h-[52px] flex items-center justify-center gap-2 px-3 py-1 rounded-xl text-xs font-extrabold transition border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-400 dark:hover:bg-amber-950/40 dark:hover:text-amber-300 shadow-2xs" title="تثبيت هذه الإعدادات كافتراضية عند كل فتح للموقع">
+            <span class="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex-shrink-0">
+              <i data-lucide="pin" class="w-4 h-4"></i>
+            </span>
+            <div id="pin-status-text" class="leading-tight text-center font-bold text-[11px]">
+              <div>تثبيت</div>
+              <div>كإعداداتي</div>
+              <div>اليومية</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Live Departures Results -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 transition-colors">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+          </span>
+          <h2 class="font-bold text-slate-800 dark:text-slate-100 text-base">مواعيد الرحلات القادمة (مع وقت الوصول المتوقع ETA)</h2>
+        </div>
+        <span id="live-indicator" class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          سيرفر RATP Dev رسمي
+        </span>
+      </div>
+
+      <div id="departures-container" class="mt-4 space-y-3">
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2">
+        <span>* يتم احتساب وقت الرحلة الفعلي ووقت الوصول المتوقع لمحطة وصولك بالدقيقة.</span>
+        <button id="btn-refresh" class="text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1 hover:text-sky-800 dark:hover:text-sky-300">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          تحديث المواعيد الآن
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 3: Calculate Trip, Exact Actual Time & Ticket Price -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 transition-colors">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-lg">
+            <i data-lucide="calculator" class="w-5 h-5"></i>
+          </span>
+          <h2 class="font-bold text-slate-800 dark:text-slate-100 text-base">احسب رحلتك: الوقت الفعلي وسعر التذكرة ومسار المحطات</h2>
+        </div>
+        <span id="calc-tariff-badge" class="text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-full">
+          التعريفة والجدول الفعلي 2026
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">🟢 محطة القيام (الركوب):</label>
+          <div class="relative">
+            <select id="calc-start" class="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm font-bold rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none">
+            </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none"></i>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">🔴 محطة الوصول (النزول):</label>
+          <div class="relative">
+            <select id="calc-end" class="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm font-bold rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none">
+            </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none"></i>
+          </div>
+        </div>
+      </div>
+
+      <div id="trip-calc-result" class="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+      </div>
+    </div>
+
+    <!-- Card 4: Ordered Route Map / Scheme -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 transition-colors">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 rounded-lg">
+            <i data-lucide="route" class="w-5 h-5"></i>
+          </span>
+          <h2 class="font-bold text-slate-800 dark:text-slate-100 text-base">مخطط مسار المحطات بالترتيب (خريطة الخط)</h2>
+        </div>
+        <span id="route-scheme-badge" class="text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-1 rounded-full border border-purple-200 dark:border-purple-800">
+          12 محطة رئيسية وتفريعة
+        </span>
+      </div>
+
+      <div id="route-scheme-container" class="mt-4 overflow-x-auto pb-2">
+      </div>
+    </div>
+
+    <!-- Quick Help & Support Footer -->
+    <div class="bg-slate-100 dark:bg-slate-900/80 rounded-2xl p-4 text-xs text-slate-600 dark:text-slate-400 flex flex-wrap items-center justify-between gap-3 border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-2">
+        <i data-lucide="phone-call" class="w-4 h-4 text-sky-600 dark:text-sky-400"></i>
+        <span>الخط الساخن: <strong>19549</strong> (موبيليتي كايرو)</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i data-lucide="message-circle" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+        <span>واتساب الاستعلامات: <strong>01103776770</strong></span>
+      </div>
+      <div class="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+        <i data-lucide="bot" class="w-4 h-4 text-purple-600 dark:text-purple-400"></i>
+        <span>البوت على التلجرام: <a href="https://t.me/trainlrt_Bot" target="_blank" class="text-sky-700 dark:text-sky-400 font-bold underline">@trainlrt_Bot</a></span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal for Adding Custom Preset with ICON PICKER -->
+  <div id="modal-preset" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl text-right">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+        <h3 class="font-extrabold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <span>🏷️</span>
+          <span>حفظ الاختيار كتثبيت سريع</span>
+        </h3>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">اسم التثبيت:</label>
+          <input type="text" id="preset-title-input" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="مثال: الذهاب للعمل، تمرين المساء، العودة للبيت">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">اختر الأيقونة المعبرة:</label>
+          <div id="icon-picker-grid" class="grid grid-cols-6 gap-2">
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400">
+          <div>📍 المحطة: <strong id="modal-station-name" class="text-teal-600 dark:text-teal-400">--</strong></div>
+          <div class="mt-1">🧭 المسار: <strong id="modal-direction-name" class="text-teal-600 dark:text-teal-400">--</strong></div>
+          <div class="mt-1">⏰ الوقت: <strong id="modal-time-name" class="text-teal-600 dark:text-teal-400">--</strong></div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button id="btn-save-preset-confirm" class="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold text-sm transition shadow-xs">
+            حفظ التثبيت الآن
+          </button>
+          <button id="btn-cancel-modal" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm transition">
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {{
+      window.addEventListener('load', () => {{
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('ServiceWorker registered:', reg.scope))
+          .catch(err => console.log('ServiceWorker error:', err));
+      }});
+    }}
+
+    // PWA Install Prompt handling
+    let deferredPrompt;
+    const btnPwaInstall = document.getElementById('btn-pwa-install');
+    window.addEventListener('beforeinstallprompt', (e) => {{
+      e.preventDefault();
+      deferredPrompt = e;
+      btnPwaInstall.classList.remove('hidden');
+      btnPwaInstall.classList.add('flex');
+    }});
+
+    btnPwaInstall.addEventListener('click', async () => {{
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const {{ outcome }} = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {{
+        btnPwaInstall.classList.add('hidden');
+      }}
+      deferredPrompt = null;
+    }});
+
+    // Theme Management (Dark Mode)
+    const btnThemeToggle = document.getElementById('btn-theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+
+    function applyTheme(isDark) {{
+      if (isDark) {{
+        document.documentElement.classList.add('dark');
+        themeIcon.setAttribute('data-lucide', 'sun');
+      }} else {{
+        document.documentElement.classList.remove('dark');
+        themeIcon.setAttribute('data-lucide', 'moon');
+      }}
+      lucide.createIcons();
+    }}
+
+    const savedTheme = localStorage.getItem('lrt_theme');
+    let isDarkMode = savedTheme ? savedTheme === 'dark' : true;
+    applyTheme(isDarkMode);
+
+    btnThemeToggle.addEventListener('click', () => {{
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('lrt_theme', isDarkMode ? 'dark' : 'light');
+      applyTheme(isDarkMode);
+    }});
+
+    // -------------------------------------------------------------
+    // DATA DEFINITIONS: LRT STATIONS & METRO LINE 3 STATIONS
+    // -------------------------------------------------------------
+    const LRT_STATIONS = [
+      {{ id: "139886", name: "عدلي منصور", branch: "main", order: 1, pos: 0, note: "محطة تبادلية كبرى مع الخط الثالث الأخضر وسكك حديد مصر والسوبرجيت" }},
+      {{ id: "139912", name: "العبور", branch: "main", order: 2, pos: 1 }},
+      {{ id: "139896", name: "المستقبل", branch: "main", order: 3, pos: 2 }},
+      {{ id: "139920", name: "الشروق", branch: "main", order: 4, pos: 3 }},
+      {{ id: "139910", name: "هليوبوليس الجديدة", branch: "main", order: 5, pos: 4 }},
+      {{ id: "139892", name: "بـــدر", branch: "main", order: 6, pos: 5, note: "محطة تبادلية وتفرع بين فرع العاصمة وفرع العاشر" }},
+      {{ id: "139916", name: "الروبيكي", branch: "capital", order: 7, pos: 6 }},
+      {{ id: "139898", name: "حدائق العاصمة", branch: "capital", order: 8, pos: 7 }},
+      {{ id: "139888", name: "مطار العاصمة", branch: "capital", order: 9, pos: 8 }},
+      {{ id: "139885", name: "مدينة الفنون والثقافة", branch: "capital", order: 10, pos: 9, note: "محطة تبادلية مع مونوريل شرق النيل" }},
+      {{ id: "139904", name: "المنطقة الصناعية", branch: "tenth", order: 7, pos: 6.5 }},
+      {{ id: "139907", name: "مدينة المعرفة", branch: "tenth", order: 8, pos: 7.5 }}
+    ];
+
+    const METRO_LINE3_STATIONS = {metro_stops_json_str};
+
+    // Accurate Actual Travel Minutes from any Line 3 Station to Adly Mansour
+    const METRO_TO_ADLY_MINS = {{
+      "139886": 0, "139913": 2, "139911": 4, "139914": 6, "139901": 8, "139915": 10,
+      "139919": 13, "139889": 15, "139900": 17, "139899": 19, "139887": 21, "139905": 23,
+      "139921": 25, "139893": 27, "139883": 30, "139884": 32, "139897": 34, "139891": 36,
+      "139890": 38, "139909": 41, "139908": 43, "139918": 46, "139906": 49, "139922": 52,
+      "139903": 54, "139895": 57, "139894": 59, "139902": 62, "139917": 65, "139999": 52,
+      "140001": 55, "139998": 57, "139997": 60, "140000": 63
+    }};
+
+    // Accurate Actual Travel Minutes from Adly Mansour to each LRT Station
+    const LRT_FROM_ADLY_MINS = {{
+      "139886": 0, "139912": 4, "139896": 8, "139920": 13, "139910": 18,
+      "139892": 24, "139916": 29, "139898": 34, "139888": 39, "139885": 44,
+      "139904": 30, "139907": 36
+    }};
+
+    // Current Active Network Mode: 'lrt' or 'metro'
+    let currentMode = localStorage.getItem('network_active_mode') || 'lrt';
+
+    // Transfer timing state: 'now', 'next', 'later'
+    let currentTransferTimingMode = 'now';
+
+    function getActiveStations() {{
+      return currentMode === 'metro' ? METRO_LINE3_STATIONS : LRT_STATIONS;
+    }}
+
+    // DOM Elements
+    const tabLrt = document.getElementById('tab-lrt');
+    const tabMetro = document.getElementById('tab-metro');
+    const headerTitle = document.getElementById('header-title');
+    const headerLogoIcon = document.getElementById('header-logo-icon');
+    const badgeNetworkName = document.getElementById('badge-network-name');
+    const selectStation = document.getElementById('select-station');
+    const selectDestStation = document.getElementById('select-dest-station');
+    const autoDirBadge = document.getElementById('auto-dir-badge');
+    const inputTime = document.getElementById('input-time');
+    const departuresContainer = document.getElementById('departures-container');
+    const btnPinPrefs = document.getElementById('btn-pin-prefs');
+    const pinStatusText = document.getElementById('pin-status-text');
+    const btnUseNow = document.getElementById('btn-use-now');
+    const btnRefresh = document.getElementById('btn-refresh');
+    const presetsList = document.getElementById('presets-list');
+    const calcStart = document.getElementById('calc-start');
+    const calcEnd = document.getElementById('calc-end');
+    const tripCalcResult = document.getElementById('trip-calc-result');
+    const calcTariffBadge = document.getElementById('calc-tariff-badge');
+    const routeSchemeBadge = document.getElementById('route-scheme-badge');
+    const routeSchemeContainer = document.getElementById('route-scheme-container');
+
+    // Transfer Guarantee Elements
+    const transferMetroStation = document.getElementById('transfer-metro-station');
+    const transferLrtStation = document.getElementById('transfer-lrt-station');
+    const transferInputTime = document.getElementById('transfer-input-time');
+    const btnCalcTransfer = document.getElementById('btn-calc-transfer');
+    const transferResultContainer = document.getElementById('transfer-result-container');
+    const optModeNow = document.getElementById('opt-mode-now');
+    const optModeNext = document.getElementById('opt-mode-next');
+    const optModeLater = document.getElementById('opt-mode-later');
+    const containerTransferTime = document.getElementById('container-transfer-time');
+    const colMetroStation = document.getElementById('col-metro-station');
+    const colLrtStation = document.getElementById('col-lrt-station');
+    const colTransferBtn = document.getElementById('col-transfer-btn');
+
+    // Timing Mode Selector Handler
+    window.setTransferTimingMode = function(mode) {{
+      currentTransferTimingMode = mode;
+
+      // Reset all buttons style
+      [optModeNow, optModeNext, optModeLater].forEach(btn => {{
+        btn.className = "py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500";
+      }});
+
+      if (mode === 'now') {{
+        optModeNow.className = "py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-amber-400 text-slate-950 border-amber-300 shadow-sm";
+        containerTransferTime.classList.add('hidden');
+        colMetroStation.className = "md:col-span-5";
+        colLrtStation.className = "md:col-span-5";
+        colTransferBtn.className = "md:col-span-2";
+      }} else if (mode === 'next') {{
+        optModeNext.className = "py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-emerald-500 text-white border-emerald-400 shadow-sm";
+        containerTransferTime.classList.add('hidden');
+        colMetroStation.className = "md:col-span-5";
+        colLrtStation.className = "md:col-span-5";
+        colTransferBtn.className = "md:col-span-2";
+      }} else if (mode === 'later') {{
+        optModeLater.className = "py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-sky-500 text-white border-sky-400 shadow-sm";
+        containerTransferTime.classList.remove('hidden');
+        colMetroStation.className = "md:col-span-4";
+        colLrtStation.className = "md:col-span-4";
+        colTransferBtn.className = "md:col-span-2";
+      }}
+
+      calculateSmartTransfer();
+    }};
+
+    // Switch Mode Handler
+    window.switchNetworkMode = function(mode) {{
+      currentMode = mode;
+      localStorage.setItem('network_active_mode', mode);
+
+      if (mode === 'metro') {{
+        tabMetro.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all duration-200 shadow-sm bg-gradient-to-l from-emerald-700 to-teal-700 text-white ring-2 ring-emerald-500/30";
+        tabLrt.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all duration-200 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800";
+        headerTitle.textContent = "مترو الخط الثالث الأخضر";
+        headerLogoIcon.setAttribute('data-lucide', 'subway');
+        badgeNetworkName.textContent = "مترو القاهرة - الخط الثالث الأخضر";
+        calcTariffBadge.textContent = "تعريفة المترو الرسمية 2026";
+        routeSchemeBadge.textContent = "34 محطة (الخط الأخضر 3)";
+      }} else {{
+        tabLrt.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all duration-200 shadow-sm bg-gradient-to-l from-teal-700 to-sky-700 text-white ring-2 ring-teal-500/30";
+        tabMetro.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all duration-200 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800";
+        headerTitle.textContent = "قطار العاصمة الكهربائي";
+        headerLogoIcon.setAttribute('data-lucide', 'train');
+        badgeNetworkName.textContent = "LRT - قطار العاصمة";
+        calcTariffBadge.textContent = "تعريفة القطار الكهربائي 2026";
+        routeSchemeBadge.textContent = "12 محطة رئيسية وتفريعة";
+      }}
+
+      populateStationDropdowns();
+      renderRouteScheme();
+      renderPresets();
+      loadSavedPreferences();
+      fetchDepartures();
+      calculateTrip();
+      lucide.createIcons();
+    }};
+
+    // Populate selects
+    function populateStationDropdowns() {{
+      const list = getActiveStations();
+      selectStation.innerHTML = '';
+      selectDestStation.innerHTML = '';
+      calcStart.innerHTML = '';
+      calcEnd.innerHTML = '';
+
+      list.forEach(s => {{
+        const interBadge = s.interchange ? ` [🔄 ${{s.interchange}}]` : '';
+        const opt1 = new Option(`${{s.name}}${{interBadge}}`, s.id);
+        const opt2 = new Option(`${{s.name}}${{interBadge}}`, s.id);
+        const opt3 = new Option(`${{s.name}}${{interBadge}}`, s.id);
+        const opt4 = new Option(`${{s.name}}${{interBadge}}`, s.id);
+
+        selectStation.add(opt1);
+        selectDestStation.add(opt2);
+        calcStart.add(opt3);
+        calcEnd.add(opt4);
+      }});
+
+      if (currentMode === 'metro') {{
+        selectStation.value = "139890"; // العتبة
+        selectDestStation.value = "139886"; // عدلي منصور
+        calcStart.value = "139890"; // العتبة
+        calcEnd.value = "139917"; // محور روض الفرج
+      }} else {{
+        selectStation.value = "139920"; // الشروق
+        selectDestStation.value = "139886"; // عدلي منصور
+        calcStart.value = "139886"; // عدلي منصور
+        calcEnd.value = "139885"; // مدينة الفنون والثقافة
+      }}
+    }}
+
+    let currentTransferDir = 'metro_to_lrt';
+
+    const btnTransferDirM2L = document.getElementById('btn-transfer-dir-m2l');
+    const btnTransferDirL2M = document.getElementById('btn-transfer-dir-l2m');
+    const lblTransferStart = document.getElementById('lbl-transfer-start');
+    const lblTransferDest = document.getElementById('lbl-transfer-dest');
+
+    window.setTransferDirection = function(dir) {{
+      currentTransferDir = dir;
+      if (dir === 'metro_to_lrt') {{
+        btnTransferDirM2L.className = "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-amber-400 text-slate-950 shadow-sm";
+        btnTransferDirL2M.className = "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 text-slate-300 hover:text-white";
+        if (lblTransferStart) lblTransferStart.textContent = "🚇 محطة القيام الحالية (المترو):";
+        if (lblTransferDest) lblTransferDest.textContent = "🚄 محطة الوصول النهائية (قطار العاصمة):";
+      }} else {{
+        btnTransferDirL2M.className = "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-amber-400 text-slate-950 shadow-sm";
+        btnTransferDirM2L.className = "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 text-slate-300 hover:text-white";
+        if (lblTransferStart) lblTransferStart.textContent = "🚄 محطة القيام الحالية (قطار العاصمة):";
+        if (lblTransferDest) lblTransferDest.textContent = "🚇 محطة الوصول النهائية (المترو):";
+      }}
+      populateTransferDropdowns();
+    }};
+
+    function populateTransferDropdowns() {{
+      transferMetroStation.innerHTML = '';
+      transferLrtStation.innerHTML = '';
+
+      if (currentTransferDir === 'metro_to_lrt') {{
+        METRO_LINE3_STATIONS.forEach(s => {{
+          const opt = new Option(`${{s.name}}${{s.interchange ? ' 🔄' : ''}}`, s.id);
+          transferMetroStation.add(opt);
+        }});
+        transferMetroStation.value = "139909";
+
+        LRT_STATIONS.forEach(s => {{
+          if (s.id !== "139886") {{
+            const opt = new Option(s.name, s.id);
+            transferLrtStation.add(opt);
+          }}
+        }});
+        transferLrtStation.value = "139920";
+      }} else {{
+        LRT_STATIONS.forEach(s => {{
+          if (s.id !== "139886") {{
+            const opt = new Option(s.name, s.id);
+            transferMetroStation.add(opt);
+          }}
+        }});
+        transferMetroStation.value = "139920";
+
+        METRO_LINE3_STATIONS.forEach(s => {{
+          if (s.id !== "139886") {{
+            const opt = new Option(`${{s.name}}${{s.interchange ? ' 🔄' : ''}}`, s.id);
+            transferLrtStation.add(opt);
+          }}
+        }});
+        transferLrtStation.value = "139909";
+      }}
+
+      const now = new Date();
+      transferInputTime.value = `${{String(now.getHours()).padStart(2, '0')}}:${{String(now.getMinutes()).padStart(2, '0')}}`;
+    }}
+
+    // Direction deduction
+    function getStationPos(id) {{
+      const list = getActiveStations();
+      const found = list.find(s => s.id === id);
+      return found ? found.pos : 0;
+    }}
+
+    function deduceDirection(startId, destId) {{
+      const p1 = getStationPos(startId);
+      const p2 = getStationPos(destId);
+      return p2 < p1 ? "1" : "0";
+    }}
+
+    function getRefinedDirectionLabel(startId, destId) {{
+      const p1 = getStationPos(startId);
+      const p2 = getStationPos(destId);
+
+      if (currentMode === 'metro') {{
+        if (p2 < p1) {{
+          return "اتجاه عدلي منصور";
+        }} else {{
+          const destObj = METRO_LINE3_STATIONS.find(s => s.id === destId);
+          if (destObj && destObj.branch === 'rod_elfarag') {{
+            return "اتجاه محور روض الفرج";
+          }} else if (destObj && destObj.branch === 'cairo_univ') {{
+            return "اتجاه جامعة القاهرة";
+          }} else {{
+            return "اتجاه الكيت كات / روض الفرج";
+          }}
+        }}
+      }} else {{
+        if (p2 < p1) {{
+          return "اتجاه عدلي منصور";
+        }} else {{
+          if (destId === "139892") return "اتجاه بدر";
+          if (destId === "139904" || destId === "139907") return "اتجاه مدينة المعرفة";
+          return "اتجاه مدينة الفنون والثقافة";
+        }}
+      }}
+    }}
+
+    function updateDirectionUI() {{
+      const startId = selectStation.value;
+      const destId = selectDestStation.value;
+      const dir = deduceDirection(startId, destId);
+      const dirLabel = getRefinedDirectionLabel(startId, destId);
+
+      if (dir === "1") {{
+        autoDirBadge.innerHTML = `🧭 <strong>${{dirLabel}}</strong>`;
+        autoDirBadge.className = "text-xs font-extrabold px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 flex items-center gap-1.5 shadow-2xs";
+      }} else {{
+        autoDirBadge.innerHTML = `🧭 <strong>${{dirLabel}}</strong>`;
+        autoDirBadge.className = "text-xs font-extrabold px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1.5 shadow-2xs";
+      }}
+      return {{ dir, dirLabel }};
+    }}
+
+    // -------------------------------------------------------------
+    // ACTUAL TIME CALCULATION FUNCTIONS (STRICT 12-HOUR FORMAT)
+    // -------------------------------------------------------------
+    function getActualTravelMinutes(startId, endId, mode) {{
+      if (mode === 'metro') {{
+        const m1 = METRO_TO_ADLY_MINS[startId] ?? 0;
+        const m2 = METRO_TO_ADLY_MINS[endId] ?? 0;
+        return Math.abs(m1 - m2);
+      }} else {{
+        const l1 = LRT_FROM_ADLY_MINS[startId] ?? 0;
+        const l2 = LRT_FROM_ADLY_MINS[endId] ?? 0;
+        return Math.abs(l1 - l2);
+      }}
+    }}
+
+    function formatTimeFromMinutes(totalMinutes) {{
+      const norm = ((totalMinutes % 1440) + 1440) % 1440;
+      const h = Math.floor(norm / 60);
+      const m = norm % 60;
+      const ampm = h >= 12 ? 'م' : 'ص';
+      const h12 = h % 12 || 12;
+      return `${{String(h12).padStart(2, '0')}}:${{String(m).padStart(2, '0')}} ${{ampm}}`;
+    }}
+
+    function convert24to12(timeStr) {{
+      if (!timeStr) return '--:--';
+      const raw = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr;
+      if (!raw.includes(':')) return raw;
+      const [hStr, mStr] = raw.split(':');
+      const h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10);
+      const ampm = h >= 12 ? 'م' : 'ص';
+      const h12 = h % 12 || 12;
+      return `${{String(h12).padStart(2, '0')}}:${{String(m).padStart(2, '0')}} ${{ampm}}`;
+    }}
+
+    // Render Route Scheme
+    function renderRouteScheme() {{
+      if (currentMode === 'metro') {{
+        const mainStations = METRO_LINE3_STATIONS.filter(s => s.branch === 'main');
+        const rodStations = METRO_LINE3_STATIONS.filter(s => s.branch === 'rod_elfarag');
+        const cairoStations = METRO_LINE3_STATIONS.filter(s => s.branch === 'cairo_univ');
+
+        routeSchemeContainer.innerHTML = `
+          <div class="space-y-4">
+            <div>
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">🟢 الخط الرئيسي (عدلي منصور ⬅️ الكيت كات):</div>
+              <div class="flex items-center gap-2 overflow-x-auto pb-2 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 min-w-[950px]">
+                ${{mainStations.map((s, idx) => `
+                  <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <span class="px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-2xs ${{
+                      s.id === '139886' ? 'bg-teal-700 text-white' :
+                      s.id === '139906' ? 'bg-amber-600 text-white' :
+                      s.interchange ? 'bg-sky-700 text-white' :
+                      'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'
+                    }}">
+                      ${{s.order}}. ${{s.name}} ${{s.interchange ? '🔄' : ''}}
+                    </span>
+                    ${{idx < mainStations.length - 1 ? '<i data-lucide="arrow-left" class="w-3.5 h-3.5 text-slate-400"></i>' : ''}}
+                  </div>
+                `).join('')}}
+              </div>
+            </div>
+
+            <div>
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">📍 تفريعة محور روض الفرج (تتفرع من الكيت كات):</div>
+              <div class="flex items-center gap-2 overflow-x-auto pb-2 p-2 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/80 w-fit">
+                <span class="px-2.5 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold">الكيت كات 🔀</span>
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-emerald-600"></i>
+                ${{rodStations.map((s, idx) => `
+                  <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <span class="px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-2xs ${{
+                      idx === rodStations.length - 1 ? 'bg-emerald-700 text-white' :
+                      s.interchange ? 'bg-sky-700 text-white' :
+                      'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'
+                    }}">
+                      ${{s.order}}. ${{s.name}} ${{s.interchange ? '🔄' : ''}}
+                    </span>
+                    ${{idx < rodStations.length - 1 ? '<i data-lucide="arrow-left" class="w-3.5 h-3.5 text-emerald-600"></i>' : ''}}
+                  </div>
+                `).join('')}}
+              </div>
+            </div>
+
+            <div>
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">📍 تفريعة جامعة القاهرة (تتفرع من الكيت كات):</div>
+              <div class="flex items-center gap-2 overflow-x-auto pb-2 p-2 bg-sky-50/60 dark:bg-sky-950/30 rounded-xl border border-sky-200 dark:border-sky-800/80 w-fit">
+                <span class="px-2.5 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold">الكيت كات 🔀</span>
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-sky-600"></i>
+                ${{cairoStations.map((s, idx) => `
+                  <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <span class="px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-2xs ${{
+                      idx === cairoStations.length - 1 ? 'bg-sky-700 text-white' :
+                      s.interchange ? 'bg-purple-700 text-white' :
+                      'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'
+                    }}">
+                      ${{s.order}}. ${{s.name}} ${{s.interchange ? '🔄' : ''}}
+                    </span>
+                    ${{idx < cairoStations.length - 1 ? '<i data-lucide="arrow-left" class="w-3.5 h-3.5 text-sky-600"></i>' : ''}}
+                  </div>
+                `).join('')}}
+              </div>
+            </div>
+          </div>
+        `;
+      }} else {{
+        routeSchemeContainer.innerHTML = `
+          <div>
+            <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">🚄 الخط الرئيسي (عدلي منصور ⬅️ مدينة الفنون والثقافة):</div>
+            <div class="flex items-center gap-2 min-w-[750px] p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+              <span class="px-2.5 py-1.5 bg-teal-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs">
+                1. عدلي منصور 🔄
+              </span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">2. العبور</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">3. المستقبل</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">4. الشروق</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">5. هليوبوليس الجديدة</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2.5 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold shadow-xs">6. بــــدر 🔀</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">7. الروبيكي</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">8. حدائق العاصمة</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">9. مطار العاصمة</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+              <span class="px-2.5 py-1.5 bg-sky-700 text-white rounded-lg text-xs font-bold shadow-xs">10. الفنون والثقافة 🔄</span>
+            </div>
+
+            <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-4 mb-2">🏭 تفريعة العاشر من رمضان (تتفرع من محطة بدر):</div>
+            <div class="flex items-center gap-2 p-2 bg-amber-50/60 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/80 w-fit">
+              <span class="px-2.5 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold">محطة بــــدر (نقطة التفرع)</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-amber-500 flex-shrink-0"></i>
+              <span class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100">11. المنطقة الصناعية</span>
+              <i data-lucide="arrow-left" class="w-4 h-4 text-amber-500 flex-shrink-0"></i>
+              <span class="px-3 py-1.5 bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs">12. مدينة المعرفة (العاشر من رمضان)</span>
+            </div>
+          </div>
+        `;
+      }}
+      lucide.createIcons();
+    }}
+
+    // Presets Management
+    function getPresetsStorageKey() {{
+      return currentMode === 'metro' ? 'metro_line3_presets' : 'lrt_user_presets';
+    }}
+
+    function getSavedPresets() {{
+      const saved = localStorage.getItem(getPresetsStorageKey());
+      if (saved !== null) {{
+        try {{
+          return JSON.parse(saved);
+        }} catch(e) {{}}
+      }}
+      if (currentMode === 'metro') {{
+        return [
+          {{ id: 'p_m1', icon: '💼', title: 'الذهاب للعمل', stationId: '139890', destStationId: '139886', time: '08:00', label: 'العتبة ⬅️ عدلي منصور (08:00 ص)' }},
+          {{ id: 'p_m2', icon: '🏠', title: 'العودة للبيت', stationId: '139886', destStationId: '139917', time: '16:00', label: 'عدلي ➡️ روض الفرج (04:00 م)' }}
+        ];
+      }} else {{
+        return [
+          {{ id: 'p_l1', icon: '💼', title: 'الذهاب للعمل', stationId: '139920', destStationId: '139886', time: '08:00', label: 'الشروق ⬅️ عدلي (08:00 ص)' }},
+          {{ id: 'p_l2', icon: '🏠', title: 'العودة للبيت', stationId: '139886', destStationId: '139885', time: '16:00', label: 'عدلي ➡️ العاصمة (04:00 م)' }}
+        ];
+      }}
+    }}
+
+    function renderPresets() {{
+      const presets = getSavedPresets();
+      presetsList.innerHTML = '';
+
+      if (presets.length === 0) {{
+        presetsList.innerHTML = `<span class="text-xs text-slate-400 dark:text-slate-500 italic">لا توجد تثبيتات محفوظة حالياً. يمكنك حفظ أي رحلة بالضغط على "حفظ الاختيار الحالي كتثبيت سريع".</span>`;
+        return;
+      }}
+
+      presets.forEach((p, idx) => {{
+        const item = document.createElement('div');
+        item.className = "flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 shadow-2xs hover:border-sky-400 dark:hover:border-sky-500 transition";
+        const iconEmoji = p.icon || '📌';
+        item.innerHTML = `
+          <button class="px-2 py-0.5 font-bold text-slate-700 dark:text-slate-200 hover:text-sky-700 dark:hover:text-sky-400 text-xs flex items-center gap-1.5" onclick="applyPresetObj(${{idx}})">
+            <span class="text-sm">${{iconEmoji}}</span>
+            <span>${{p.title}}</span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-normal">(${{p.label}})</span>
+          </button>
+          <button class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" onclick="deletePreset(${{idx}})" title="حذف هذا التثبيت السريع">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+        presetsList.appendChild(item);
+      }});
+      lucide.createIcons();
+    }}
+
+    window.applyPresetObj = function(idx) {{
+      const presets = getSavedPresets();
+      const p = presets[idx];
+      if (!p) return;
+      selectStation.value = p.stationId;
+      selectDestStation.value = p.destStationId;
+      inputTime.value = p.time;
+      updateDirectionUI();
+      fetchDepartures();
+    }};
+
+    window.deletePreset = function(idx) {{
+      let presets = getSavedPresets();
+      presets.splice(idx, 1);
+      localStorage.setItem(getPresetsStorageKey(), JSON.stringify(presets));
+      renderPresets();
+    }};
+
+    // Preferences Pinning
+    function getPrefsKey() {{
+      return currentMode === 'metro' ? 'metro_pinned_preferences' : 'lrt_pinned_preferences';
+    }}
+
+    function loadSavedPreferences() {{
+      const saved = localStorage.getItem(getPrefsKey());
+      if (saved) {{
+        try {{
+          const prefs = JSON.parse(saved);
+          if (prefs.stationId) selectStation.value = prefs.stationId;
+          if (prefs.destStationId) selectDestStation.value = prefs.destStationId;
+          if (prefs.time) inputTime.value = prefs.time;
+          else setCurrentTime();
+
+          btnPinPrefs.className = "w-full h-[52px] flex items-center justify-center gap-2 px-3 py-1 rounded-xl text-xs font-extrabold transition border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 shadow-2xs";
+          pinStatusText.innerHTML = "<div>مثبت</div><div>كإعدادك</div><div>اليومي</div>";
+          updateDirectionUI();
+          return;
+        }} catch(e) {{}}
+      }}
+      setCurrentTime();
+      updateDirectionUI();
+    }}
+
+    function savePreferences() {{
+      const prefs = {{
+        stationId: selectStation.value,
+        destStationId: selectDestStation.value,
+        direction: deduceDirection(selectStation.value, selectDestStation.value),
+        time: inputTime.value
+      }};
+      localStorage.setItem(getPrefsKey(), JSON.stringify(prefs));
+      btnPinPrefs.className = "w-full h-[52px] flex items-center justify-center gap-2 px-3 py-1 rounded-xl text-xs font-extrabold transition border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 shadow-2xs";
+      pinStatusText.innerHTML = "<div>مثبت</div><div>كإعدادك</div><div>اليومي</div>";
+      alert("✅ تم تثبيت الإعدادات كافتراضية بنجاح!");
+    }}
+
+    // Time handling
+    function updateClock() {{
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('current-clock').textContent = `${{h}}:${{m}}:${{s}}`;
+    }}
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function setCurrentTime() {{
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      inputTime.value = `${{h}}:${{m}}`;
+    }}
+
+    // Fetch Departures with ACTUAL ETA calculation
+    async function fetchDepartures() {{
+      const stopId = selectStation.value;
+      const destStopId = selectDestStation.value;
+
+      if (stopId === destStopId) {{
+        departuresContainer.innerHTML = `
+          <div class="p-6 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-center text-amber-800 dark:text-amber-300 text-xs font-bold">
+            ⚠️ محطة القيام هي نفسها محطة الوصول! يرجى اختيار محطة وصول مختلفة لتحديد مسار الرحلة والمواعيد.
+          </div>
+        `;
+        return;
+      }}
+
+      const {{ dir: dirCode, dirLabel }} = updateDirectionUI();
+      const chosenTime = inputTime.value || "08:00";
+
+      departuresContainer.innerHTML = `
+        <div class="py-8 text-center text-slate-500 dark:text-slate-400 text-xs flex items-center justify-center gap-2">
+          <i data-lucide="loader" class="w-5 h-5 animate-spin text-sky-600 dark:text-sky-400"></i>
+          <span>جارٍ الاتصال بسيرفر Mobility Cairo لجلب المواعيد الرسمية المحدثة...</span>
+        </div>
+      `;
+      lucide.createIcons();
+
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const dateStr = `${{yyyy}}-${{mm}}-${{dd}}`;
+      const timeStr = `${{chosenTime}}:00`;
+
+      const queryParams = `nbtimes=6&stop=${{stopId}}&reseau=&date=${{dateStr}}&heure=${{timeStr}}`;
+      const proxyUrl = `/api/mobility?${{queryParams}}`;
+      const directUrl = `https://www.mobilitycairo.com/ar/pthv/get/stop-stoptimes-discovery?${{queryParams}}`;
+
+      try {{
+        let resp;
+        try {{
+          resp = await fetch(proxyUrl);
+        }} catch(e) {{
+          resp = await fetch(directUrl);
+        }}
+        const data = await resp.json();
+
+        if (!data || data === false || !data.items) {{
+          showEmpty();
+          return;
+        }}
+
+        const items = data.items;
+        let schedules = [];
+
+        if (currentMode === 'metro') {{
+          const targetKey = `L3-57_${{dirCode}}`;
+          if (items[targetKey]) {{
+            schedules = items[targetKey].Schedule || [];
+          }} else {{
+            for (const k in items) {{
+              if (k.startsWith('L3-57') && String(items[k].Direction) === String(dirCode)) {{
+                schedules = items[k].Schedule || [];
+                break;
+              }}
+            }}
+          }}
+        }} else {{
+          const targetKey = `LRT-14_${{dirCode}}`;
+          if (items[targetKey]) {{
+            schedules = items[targetKey].Schedule || [];
+          }} else {{
+            for (const k in items) {{
+              if (k.startsWith('LRT-14') && String(items[k].Direction) === String(dirCode)) {{
+                schedules = items[k].Schedule || [];
+                break;
+              }}
+            }}
+          }}
+        }}
+
+        if (!schedules || schedules.length === 0) {{
+          showEmpty();
+          return;
+        }}
+
+        const actualTripMins = getActualTravelMinutes(stopId, destStopId, currentMode);
+        renderSchedules(schedules, chosenTime, actualTripMins);
+      }} catch(err) {{
+        console.error(err);
+        departuresContainer.innerHTML = `
+          <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+            تعذر الاتصال بالسيرفر حالياً. يرجى التأكد من اتصال الإنترنت ثم الضغط على تحديث.
+          </div>
+        `;
+      }}
+    }}
+
+    function renderSchedules(schedules, baseTimeStr, actualTripMins) {{
+      departuresContainer.innerHTML = '';
+      const [bH, bM] = baseTimeStr.split(':').map(Number);
+      const baseTotalMins = bH * 60 + bM;
+
+      schedules.slice(0, 5).forEach((s, idx) => {{
+        const depRaw = s.DepTime || "";
+        const hhMm = depRaw.includes(" ") ? depRaw.split(" ")[1] : depRaw;
+        const tripHead = s.tripHeadsign || s.to_stop_name || "";
+        const fromStop = s.from_stop_name || "";
+
+        let countdown = "";
+        let etaStr = "";
+        let time12 = convert24to12(hhMm);
+
+        if (hhMm.includes(":")) {{
+          const [tH, tM] = hhMm.split(":").map(Number);
+          const tTotalMins = tH * 60 + tM;
+          const diff = tTotalMins - baseTotalMins;
+          if (diff < 0) countdown = "يتحرك الآن";
+          else if (diff === 0) countdown = "يصل الآن للرصيف";
+          else countdown = `بعد ${{diff}} دقيقة`;
+
+          const etaMins = tTotalMins + actualTripMins;
+          etaStr = formatTimeFromMinutes(etaMins);
+        }}
+
+        const isNext = idx === 0;
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${{
+          isNext 
+            ? 'bg-gradient-to-r from-sky-50 to-teal-50 dark:from-slate-800/90 dark:to-teal-950/50 border-sky-300 dark:border-sky-600 shadow-sm' 
+            : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
+        }}`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-mono font-bold text-base ${{
+              isNext ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+            }}">
+              ${{idx + 1}}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xl font-mono font-black text-slate-800 dark:text-slate-100">${{time12}}</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-md ${{
+                  isNext ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                }}">${{countdown}}</span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                متجه إلى: <strong class="text-slate-700 dark:text-slate-200">${{tripHead}}</strong>
+              </p>
+            </div>
+          </div>
+          <div class="text-right sm:text-left flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-slate-700">
+            <span class="text-xs font-extrabold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/70 border border-teal-200 dark:border-teal-800 px-2 py-0.5 rounded-md">
+              🎯 ميعاد الوصول المتوقع: ${{etaStr}}
+            </span>
+            <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-1">الرحلة تستغرق: ${{actualTripMins}} دقيقة</span>
+          </div>
+        `;
+        departuresContainer.appendChild(card);
+      }});
+      lucide.createIcons();
+    }}
+
+    function showEmpty() {{
+      departuresContainer.innerHTML = `
+        <div class="p-6 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-center text-amber-800 dark:text-amber-300 text-xs">
+          🌙 الخدمة غير مجدولة أو متوقفة في هذا التوقيت لهذا المسار.<br>
+          يرجى اختيار مسار أو وقت آخر ضمن مواعيد العمل الرسمية (05:30 ص - 11:30 م).
+        </div>
+      `;
+    }}
+
+    // -------------------------------------------------------------
+    // TRIP CALCULATION & TARIFF WITH ACTUAL TRAVEL TIMES
+    // -------------------------------------------------------------
+    
+    let tripCountdownTimer = null;
+    function startLiveTripCountdown(depMinutes, tripMinutes) {{
+      if (tripCountdownTimer) clearInterval(tripCountdownTimer);
+      function tick() {{
+        const now = new Date();
+        const nowSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        const depSecs = depMinutes * 60;
+        const arrSecs = (depMinutes + tripMinutes) * 60;
+
+        const depDiff = depSecs - nowSecs;
+        const arrDiff = arrSecs - nowSecs;
+
+        const depEl = document.getElementById("live-trip-dep-timer");
+        const arrEl = document.getElementById("live-trip-arr-timer");
+
+        if (depEl) {{
+          if (depDiff > 0) {{
+            const m = Math.floor(depDiff / 60);
+            const s = depDiff % 60;
+            depEl.textContent = `${{m}} د و ${{s < 10 ? '0' : ''}}${{s}} ث`;
+          }} else if (depDiff >= -60) {{
+            depEl.innerHTML = `<span class="text-emerald-400">🚀 يتحرك الآن من الرصيف</span>`;
+          }} else {{
+            depEl.innerHTML = `<span class="text-rose-400">⚠️ تحرك منذ ${{Math.abs(Math.floor(depDiff / 60))}} د</span>`;
+          }}
+        }}
+
+        if (arrEl) {{
+          if (arrDiff > 0) {{
+            const m = Math.floor(arrDiff / 60);
+            const s = arrDiff % 60;
+            arrEl.textContent = `${{m}} د و ${{s < 10 ? '0' : ''}}${{s}} ث`;
+          }} else {{
+            arrEl.innerHTML = `<span class="text-emerald-400">🏁 وصلت لمحطتك</span>`;
+          }}
+        }}
+      }}
+      tick();
+      tripCountdownTimer = setInterval(tick, 1000);
+    }}
+
+    function calculateTrip() {{
+      const startId = calcStart.value;
+      const endId = calcEnd.value;
+
+      if (startId === endId) {{
+        tripCalcResult.innerHTML = `
+          <div class="text-center text-amber-700 dark:text-amber-400 font-bold text-xs py-2">
+            ⚠️ محطة القيام هي نفسها محطة الوصول! يرجى اختيار محطتين مختلفتين.
+          </div>
+        `;
+        return;
+      }}
+
+      if (currentMode === 'metro') {{
+        calculateMetroTrip(startId, endId);
+      }} else {{
+        calculateLrtTrip(startId, endId);
+      }}
+    }}
+
+    async function calculateMetroTrip(startId, endId, selectedDepMins = null) {{
+      const stStart = METRO_LINE3_STATIONS.find(s => s.id === startId);
+      const stEnd = METRO_LINE3_STATIONS.find(s => s.id === endId);
+
+      const mainIds = METRO_LINE3_STATIONS.filter(s => s.branch === 'main').map(s => s.id);
+      const rodIds = METRO_LINE3_STATIONS.filter(s => s.branch === 'rod_elfarag').map(s => s.id);
+      const cairoIds = METRO_LINE3_STATIONS.filter(s => s.branch === 'cairo_univ').map(s => s.id);
+
+      let path = [];
+      if (mainIds.includes(startId) && mainIds.includes(endId)) {{
+        const i1 = mainIds.indexOf(startId);
+        const i2 = mainIds.indexOf(endId);
+        path = i1 <= i2 ? mainIds.slice(i1, i2 + 1) : mainIds.slice(i2, i1 + 1).reverse();
+      }}
+      else if ((mainIds.includes(startId) && rodIds.includes(endId)) || (rodIds.includes(startId) && mainIds.includes(endId))) {{
+        if (mainIds.includes(startId)) {{
+          const p1 = mainIds.slice(mainIds.indexOf(startId));
+          const p2 = rodIds.slice(0, rodIds.indexOf(endId) + 1);
+          path = [...p1, ...p2];
+        }} else {{
+          const p1 = rodIds.slice(0, rodIds.indexOf(startId) + 1).reverse();
+          const p2 = mainIds.slice(mainIds.indexOf(endId)).reverse();
+          path = [...p1, ...p2];
+        }}
+      }}
+      else if ((mainIds.includes(startId) && cairoIds.includes(endId)) || (cairoIds.includes(startId) && mainIds.includes(endId))) {{
+        if (mainIds.includes(startId)) {{
+          const p1 = mainIds.slice(mainIds.indexOf(startId));
+          const p2 = cairoIds.slice(0, cairoIds.indexOf(endId) + 1);
+          path = [...p1, ...p2];
+        }} else {{
+          const p1 = cairoIds.slice(0, cairoIds.indexOf(startId) + 1).reverse();
+          const p2 = mainIds.slice(mainIds.indexOf(endId)).reverse();
+          path = [...p1, ...p2];
+        }}
+      }}
+      else if ((rodIds.includes(startId) && cairoIds.includes(endId)) || (cairoIds.includes(startId) && rodIds.includes(endId))) {{
+        if (rodIds.includes(startId)) {{
+          const p1 = rodIds.slice(0, rodIds.indexOf(startId) + 1).reverse();
+          const p2 = cairoIds.slice(0, cairoIds.indexOf(endId) + 1);
+          path = [...p1, "139906", ...p2];
+        }} else {{
+          const p1 = cairoIds.slice(0, cairoIds.indexOf(startId) + 1).reverse();
+          const p2 = rodIds.slice(0, rodIds.indexOf(endId) + 1);
+          path = [...p1, "139906", ...p2];
+        }}
+      }} else {{
+        const bList = rodIds.includes(startId) ? rodIds : cairoIds;
+        const i1 = bList.indexOf(startId);
+        const i2 = bList.indexOf(endId);
+        path = i1 <= i2 ? bList.slice(i1, i2 + 1) : bList.slice(i2, i1 + 1).reverse();
+      }}
+
+      path = path.filter((v, i, a) => a.indexOf(v) === i);
+      const stationCount = Math.max(1, path.length - 1);
+
+      let price = 8;
+      let tierDesc = "منطقة واحدة (حتى 9 محطات)";
+      if (stationCount <= 9) {{
+        price = 8;
+        tierDesc = "حتى 9 محطات";
+      }} else if (stationCount <= 16) {{
+        price = 10;
+        tierDesc = "من 10 إلى 16 محطة";
+      }} else if (stationCount <= 23) {{
+        price = 15;
+        tierDesc = "من 17 إلى 23 محطة";
+      }} else {{
+        price = 20;
+        tierDesc = "أكثر من 23 محطة";
+      }}
+
+      const exactMinutes = getActualTravelMinutes(startId, endId, 'metro');
+      const pathStations = path.map(id => METRO_LINE3_STATIONS.find(s => s.id === id)).filter(Boolean);
+
+      // Determine direction: 1 = towards Adly Mansour, 0 = towards Cairo Univ / Rod El Farag
+      const mToAdlyStart = METRO_TO_ADLY_MINS[startId] ?? 20;
+      const mToAdlyEnd = METRO_TO_ADLY_MINS[endId] ?? 0;
+      const dirCode = mToAdlyStart > mToAdlyEnd ? "1" : "0";
+      const dirKey = dirCode === "1" ? "L3-57_1" : "L3-57_0";
+
+      // If user hasn't selected a departure yet, fetch next 5 trains
+      let departures = [];
+      const now = new Date();
+      const nowH = now.getHours();
+      const nowM = now.getMinutes();
+      const nowTotalMins = nowH * 60 + nowM;
+
+      try {{
+        const dateStr = `${{now.getFullYear()}}-${{String(now.getMonth()+1).padStart(2,'0')}}-${{String(now.getDate()).padStart(2,'0')}}`;
+        const timeStr = `${{String(nowH).padStart(2,'0')}}:${{String(nowM).padStart(2,'0')}}:00`;
+        const resp = await fetch(`/api/mobility?nbtimes=5&stop=${{startId}}&reseau=&date=${{dateStr}}&heure=${{timeStr}}`);
+        const data = await resp.json();
+        const sched = (data && data.items && data.items[dirKey]) ? data.items[dirKey].Schedule || [] : [];
+        for (const s of sched) {{
+          const depRaw = s.DepTime || "";
+          const hhmm = depRaw.includes(" ") ? depRaw.split(" ")[1] : depRaw;
+          if (hhmm.includes(":")) {{
+            const [dh, dm] = hhmm.split(':').map(Number);
+            departures.push({{
+              time: hhmm,
+              mins: dh * 60 + dm,
+              head: s.tripHeadsign || s.to_stop_name || ""
+            }});
+          }}
+        }}
+      }} catch (err) {{
+        console.warn("Could not fetch live metro departures:", err);
+      }}
+
+      // Fallback 5 departures if API empty
+      if (departures.length === 0) {{
+        for (let i = 0; i < 5; i++) {{
+          const dm = nowTotalMins + 4 + i * 6;
+          const hh = Math.floor(dm / 60) % 24;
+          const mm = dm % 60;
+          departures.push({{
+            time: `${{String(hh).padStart(2,'0')}}:${{String(mm).padStart(2,'0')}}`,
+            mins: dm,
+            head: dirCode === "1" ? "عدلي منصور" : "جامعة القاهرة / روض الفرج"
+          }});
+        }}
+      }}
+
+      // Pick selected or first
+      let chosenDep = departures[0];
+      if (selectedDepMins !== null) {{
+        const found = departures.find(d => d.mins === selectedDepMins);
+        if (found) chosenDep = found;
+        else chosenDep = {{ mins: selectedDepMins, time: `${{String(Math.floor(selectedDepMins/60)%24).padStart(2,'0')}}:${{String(selectedDepMins%60).padStart(2,'0')}}` }};
+      }}
+
+      const arrMins = chosenDep.mins + exactMinutes;
+      const formattedDep = formatTimeFromMinutes(chosenDep.mins);
+      const formattedArr = formatTimeFromMinutes(arrMins);
+
+      tripCalcResult.innerHTML = `
+        <!-- Live Countdown Widget -->
+        <div class="mb-4 bg-gradient-to-r from-amber-950/60 via-slate-900 to-emerald-950/60 border border-amber-500/40 rounded-2xl p-3.5 shadow-xl text-center">
+          <div class="flex items-center justify-center gap-2 mb-1">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-xs font-bold text-amber-300">العداد التنازلي الحي للرحلة (محدث ثانية بثانية):</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
+            <div class="bg-black/50 border border-white/10 rounded-xl p-2.5">
+              <span class="block text-xs text-slate-300 mb-0.5">⏳ متبقي على تحرك القطار:</span>
+              <span id="live-trip-dep-timer" class="text-2xl font-black font-mono text-amber-400">--:--</span>
+            </div>
+            <div class="bg-black/50 border border-white/10 rounded-xl p-2.5">
+              <span class="block text-xs text-slate-300 mb-0.5">🏁 متبقي على وصولك لمحطتك:</span>
+              <span id="live-trip-arr-timer" class="text-2xl font-black font-mono text-emerald-400">--:--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next 5 Trains Selector Bar -->
+        <div class="mb-4 bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-3.5 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <i data-lucide="clock" class="w-4 h-4"></i>
+              <span>اختر رحلتك من الـ 5 قطارات القادمة من محطة (${{stStart.name}}):</span>
+            </span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded-full font-mono">حي 🟢 RATP Dev</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            ${{departures.slice(0, 5).map((dep, idx) => {{
+              const isSelected = dep.mins === chosenDep.mins;
+              const diffMins = dep.mins - nowTotalMins;
+              const diffText = diffMins <= 0 ? 'الآن' : `بعد ${{diffMins}} د`;
+              const activeClass = isSelected
+                ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-300 shadow-md transform scale-[1.02]'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700';
+
+              return `
+                <button type="button" onclick="calculateMetroTrip('${{startId}}', '${{endId}}', ${{dep.mins}})"
+                        class="p-2 rounded-xl text-center transition-all cursor-pointer ${{activeClass}}">
+                  <span class="block text-xs font-mono font-bold">${{formatTimeFromMinutes(dep.mins)}}</span>
+                  <span class="block text-[10px] opacity-80 mt-0.5">قطار ${{idx + 1}} (${{diffText}})</span>
+                </button>
+              `;
+            }}).join('')}}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+          <div class="bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl p-3 text-center">
+            <span class="text-xs text-amber-800 dark:text-amber-300 font-bold block mb-1">🎫 سعر تذكرة المترو</span>
+            <span class="text-2xl font-black text-amber-900 dark:text-amber-200 font-mono">${{price}} <span class="text-sm font-bold">ج.م</span></span>
+            <span class="text-[10px] text-amber-700 dark:text-amber-400 block mt-0.5">شريحة: ${{tierDesc}}</span>
+          </div>
+          <div class="bg-emerald-100/70 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-xl p-3 text-center">
+            <span class="text-xs text-emerald-800 dark:text-emerald-300 font-bold block mb-1">🚇 عدد المحطات</span>
+            <span class="text-2xl font-black text-emerald-900 dark:text-emerald-200 font-mono">${{stationCount}} <span class="text-sm font-bold">محطة</span></span>
+            <span class="text-[10px] text-emerald-700 dark:text-emerald-400 block mt-0.5">من ${{stStart.name}} إلى ${{stEnd.name}}</span>
+          </div>
+          <div class="bg-sky-100/70 dark:bg-sky-950/40 border border-sky-300 dark:border-sky-800 rounded-xl p-3 text-center">
+            <span class="text-xs text-sky-800 dark:text-sky-300 font-bold block mb-1">⏱️ زمن الرحلة الفعلي</span>
+            <span class="text-2xl font-black text-sky-900 dark:text-sky-200 font-mono">${{exactMinutes}} <span class="text-sm font-bold">دقيقة</span></span>
+            <span class="text-[10px] text-sky-700 dark:text-sky-400 block mt-0.5">سرعة التشغيل الرسمية</span>
+          </div>
+          <div class="bg-purple-100/70 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800 rounded-xl p-3 text-center">
+            <span class="text-xs text-purple-800 dark:text-purple-300 font-bold block mb-1">🏁 موعد الوصول المتوقع</span>
+            <span class="text-2xl font-black text-purple-900 dark:text-purple-200 font-mono">${{formattedArr}}</span>
+            <span class="text-[10px] text-purple-700 dark:text-purple-400 block mt-0.5">انطلاق القطار: ${{formattedDep}}</span>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <div class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="milestone" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+              <span>خط سير رحلتك بالتفصيل محطة بمحطة وتوقيت كل محطة (${{stationCount}} محطة):</span>
+            </span>
+            <span class="text-[11px] text-slate-500 font-normal">رحلة قطار: <b>${{formattedDep}}</b> ⬅️ <b>${{formattedArr}}</b></span>
+          </div>
+          <div class="flex items-center gap-2 overflow-x-auto pb-2 pt-1">
+            ${{pathStations.map((s, idx) => {{
+              const isFirst = idx === 0;
+              const isLast = idx === pathStations.length - 1;
+              const isKitKat = s.id === "139906";
+              const cumMins = Math.abs((METRO_TO_ADLY_MINS[s.id] ?? 0) - (METRO_TO_ADLY_MINS[startId] ?? 0));
+              const stationPassMins = chosenDep.mins + cumMins;
+              const stationPassTime = formatTimeFromMinutes(stationPassMins);
+
+              let badgeClass = "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200";
+              if (isFirst) badgeClass = "bg-emerald-600 dark:bg-emerald-700 text-white border-emerald-700 font-bold";
+              else if (isLast) badgeClass = "bg-rose-600 dark:bg-rose-700 text-white border-rose-700 font-bold";
+              else if (isKitKat) badgeClass = "bg-amber-500 dark:bg-amber-600 text-white border-amber-600 font-bold";
+
+              return `
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                  <div class="flex flex-col items-center">
+                    <span class="px-2.5 py-1.5 rounded-lg border text-xs shadow-2xs ${{badgeClass}}">
+                      ${{isFirst ? '🟢 ' : isLast ? '🔴 ' : isKitKat ? '🔀 ' : ''}}${{s.name}}
+                    </span>
+                    <span class="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 mt-1">${{stationPassTime}}</span>
+                  </div>
+                  ${{!isLast ? '<i data-lucide="arrow-left" class="w-3.5 h-3.5 text-slate-400 mt-[-14px]"></i>' : ''}}
+                </div>
+              `;
+            }}).join('')}}
+          </div>
+          ${{(rodIds.includes(startId) && cairoIds.includes(endId)) || (cairoIds.includes(startId) && rodIds.includes(endId)) ? `
+            <div class="mt-2 text-[11px] bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 p-2 rounded-lg font-bold">
+              ℹ️ تنبيه: هذه الرحلة تتطلب التبديل في محطة (الكيت كات) بين فرع روض الفرج وفرع جامعة القاهرة.
+            </div>
+          ` : ''}}
+        </div>
+      `;
+      lucide.createIcons();
+    }}
+
+    function calculateLrtTrip(startId, endId) {{
+      const stStart = LRT_STATIONS.find(s => s.id === startId);
+      const stEnd = LRT_STATIONS.find(s => s.id === endId);
+
+      const fullMainOrder = ["139886", "139912", "139896", "139920", "139910", "139892"];
+      const capitalOrder = ["139916", "139898", "139888", "139885"];
+      const tenthOrder = ["139904", "139907"];
+
+      let path = [];
+      if (fullMainOrder.includes(startId) && fullMainOrder.includes(endId)) {{
+        const i1 = fullMainOrder.indexOf(startId);
+        const i2 = fullMainOrder.indexOf(endId);
+        path = i1 <= i2 ? fullMainOrder.slice(i1, i2 + 1) : fullMainOrder.slice(i2, i1 + 1).reverse();
+      }}
+      else if ((fullMainOrder.includes(startId) && capitalOrder.includes(endId)) || (capitalOrder.includes(startId) && fullMainOrder.includes(endId))) {{
+        if (fullMainOrder.includes(startId)) {{
+          const p1 = fullMainOrder.slice(fullMainOrder.indexOf(startId));
+          const p2 = capitalOrder.slice(0, capitalOrder.indexOf(endId) + 1);
+          path = [...p1, ...p2];
+        }} else {{
+          const p1 = capitalOrder.slice(0, capitalOrder.indexOf(startId) + 1).reverse();
+          const p2 = fullMainOrder.slice(fullMainOrder.indexOf(endId), fullMainOrder.length - 1).reverse();
+          path = [...p1, "139892", ...p2];
+        }}
+      }}
+      else if ((fullMainOrder.includes(startId) && tenthOrder.includes(endId)) || (tenthOrder.includes(startId) && fullMainOrder.includes(endId))) {{
+        if (fullMainOrder.includes(startId)) {{
+          const p1 = fullMainOrder.slice(fullMainOrder.indexOf(startId));
+          const p2 = tenthOrder.slice(0, tenthOrder.indexOf(endId) + 1);
+          path = [...p1, ...p2];
+        }} else {{
+          const p1 = tenthOrder.slice(0, tenthOrder.indexOf(startId) + 1).reverse();
+          const p2 = fullMainOrder.slice(fullMainOrder.indexOf(endId), fullMainOrder.length - 1).reverse();
+          path = [...p1, "139892", ...p2];
+        }}
+      }}
+      else if ((capitalOrder.includes(startId) && tenthOrder.includes(endId)) || (tenthOrder.includes(startId) && capitalOrder.includes(endId))) {{
+        if (capitalOrder.includes(startId)) {{
+          const p1 = capitalOrder.slice(0, capitalOrder.indexOf(startId) + 1).reverse();
+          const p2 = tenthOrder.slice(0, tenthOrder.indexOf(endId) + 1);
+          path = [...p1, "139892", ...p2];
+        }} else {{
+          const p1 = tenthOrder.slice(0, tenthOrder.indexOf(startId) + 1).reverse();
+          const p2 = capitalOrder.slice(0, capitalOrder.indexOf(endId) + 1);
+          path = [...p1, "139892", ...p2];
+        }}
+      }} else {{
+        const list = capitalOrder.includes(startId) ? capitalOrder : tenthOrder;
+        const i1 = list.indexOf(startId);
+        const i2 = list.indexOf(endId);
+        path = i1 <= i2 ? list.slice(i1, i2 + 1) : list.slice(i2, i1 + 1).reverse();
+      }}
+
+      path = path.filter((v, i, a) => a.indexOf(v) === i);
+      const stationCount = Math.max(1, path.length - 1);
+
+      let price = 10;
+      let tierDesc = "من 1 إلى 3 محطات";
+      if (stationCount <= 3) {{
+        price = 10;
+        tierDesc = "حتى 3 محطات";
+      }} else if (stationCount <= 7) {{
+        price = 15;
+        tierDesc = "من 4 إلى 7 محطات";
+      }} else {{
+        price = 20;
+        tierDesc = "أكثر من 7 محطات";
+      }}
+
+      const exactMinutes = getActualTravelMinutes(startId, endId, 'lrt');
+      const pathStations = path.map(id => LRT_STATIONS.find(s => s.id === id)).filter(Boolean);
+
+      tripCalcResult.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div class="bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl p-3 text-center">
+            <span class="text-xs text-amber-800 dark:text-amber-300 font-bold block mb-1">🎫 سعر التذكرة الرسمية</span>
+            <span class="text-2xl font-black text-amber-900 dark:text-amber-200 font-mono">${{price}} <span class="text-sm font-bold">ج.م</span></span>
+            <span class="text-[10px] text-amber-700 dark:text-amber-400 block mt-0.5">شريحة: ${{tierDesc}}</span>
+          </div>
+          <div class="bg-sky-100/70 dark:bg-sky-950/40 border border-sky-300 dark:border-sky-800 rounded-xl p-3 text-center">
+            <span class="text-xs text-sky-800 dark:text-sky-300 font-bold block mb-1">🚉 عدد المحطات في الرحلة</span>
+            <span class="text-2xl font-black text-sky-900 dark:text-sky-200 font-mono">${{stationCount}} <span class="text-sm font-bold">محطة</span></span>
+            <span class="text-[10px] text-sky-700 dark:text-sky-400 block mt-0.5">من ${{stStart.name}} إلى ${{stEnd.name}}</span>
+          </div>
+          <div class="bg-emerald-100/70 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-xl p-3 text-center">
+            <span class="text-xs text-emerald-800 dark:text-emerald-300 font-bold block mb-1">⏱️ الوقت الفعلي للرحلة</span>
+            <span class="text-2xl font-black text-emerald-900 dark:text-emerald-200 font-mono">${{exactMinutes}} <span class="text-sm font-bold">دقيقة</span></span>
+            <span class="text-[10px] text-emerald-700 dark:text-emerald-400 block mt-0.5">وفقاً لجداول تشغيل RATP Dev الدقيقة</span>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <div class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
+            <i data-lucide="milestone" class="w-4 h-4 text-sky-600 dark:text-sky-400"></i>
+            <span>خط سير رحلتك بالتفصيل محطة بمحطة (${{stationCount}} محطة):</span>
+          </div>
+          <div class="flex items-center gap-2 overflow-x-auto pb-2 pt-1">
+            ${{pathStations.map((s, idx) => {{
+              const isFirst = idx === 0;
+              const isLast = idx === pathStations.length - 1;
+              const isBadr = s.id === "139892"; const cumMins = Math.abs((LRT_FROM_ADLY_MINS[s.id] ?? 0) - (LRT_FROM_ADLY_MINS[startId] ?? 0));
+              let badgeClass = "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200";
+              if (isFirst) badgeClass = "bg-teal-600 dark:bg-teal-700 text-white border-teal-700 font-bold";
+              else if (isLast) badgeClass = "bg-rose-600 dark:bg-rose-700 text-white border-rose-700 font-bold";
+              else if (isBadr) badgeClass = "bg-amber-500 dark:bg-amber-600 text-white border-amber-600 font-bold";
+
+              return `
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                  <span class="px-2.5 py-1.5 rounded-lg border text-xs shadow-2xs ${{badgeClass}}">
+                    ${{isFirst ? '🟢 ' : isLast ? '🔴 ' : isBadr ? '🔀 ' : ''}}${{s.name}}
+                  </span>
+                  ${{!isLast ? '<i data-lucide="arrow-left" class="w-3.5 h-3.5 text-slate-400"></i>' : ''}}
+                </div>
+              `;
+            }}).join('')}}
+          </div>
+          ${{(capitalOrder.includes(startId) && tenthOrder.includes(endId)) || (tenthOrder.includes(startId) && capitalOrder.includes(endId)) ? `
+            <div class="mt-2 text-[11px] bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 p-2 rounded-lg font-bold">
+              ℹ️ تنبيه: هذه الرحلة تتطلب التبديل والتحويل في محطة (بــــدر) بين قطار فرع العاصمة وقطار فرع العاشر من رمضان.
+            </div>
+          ` : ''}}
+        </div>
+      `;
+      lucide.createIcons();
+    }}
+
+    // -------------------------------------------------------------
+    // SMART TRANSFER GUARANTEE (هل هلحق قطار العاصمة من المترو؟)
+    // -------------------------------------------------------------
+    // Helper: Path stations count between any two Line 3 stations
+    function getMetroStationsCount(startId, endId) {{
+      const mainIds = METRO_LINE3_STATIONS.filter(s => s.branch === 'main').map(s => s.id);
+      const rodIds = METRO_LINE3_STATIONS.filter(s => s.branch === 'rod_elfarag').map(s => s.id);
+      const cairoIds = METRO_LINE3_STATIONS.filter(s => s.branch === 'cairo_univ').map(s => s.id);
+
+      let path = [];
+      if (mainIds.includes(startId) && mainIds.includes(endId)) {{
+        const i1 = mainIds.indexOf(startId);
+        const i2 = mainIds.indexOf(endId);
+        path = i1 <= i2 ? mainIds.slice(i1, i2 + 1) : mainIds.slice(i2, i1 + 1);
+      }} else if (rodIds.includes(startId) && mainIds.includes(endId)) {{
+        path = [...rodIds.slice(0, rodIds.indexOf(startId) + 1), ...mainIds];
+      }} else if (cairoIds.includes(startId) && mainIds.includes(endId)) {{
+        path = [...cairoIds.slice(0, cairoIds.indexOf(startId) + 1), ...mainIds];
+      }} else {{
+        path = [startId, endId];
+      }}
+      path = path.filter((v, i, a) => a.indexOf(v) === i);
+      return Math.max(1, path.length);
+    }}
+
+    // Helper: Path stations count from Adly Mansour to any LRT Station
+    function getLrtStationsCount(endId) {{
+      const fullMainOrder = ["139886", "139912", "139896", "139920", "139910", "139892"];
+      const capitalOrder = ["139916", "139898", "139888", "139885"];
+      const tenthOrder = ["139904", "139907"];
+
+      let path = [];
+      if (fullMainOrder.includes(endId)) {{
+        path = fullMainOrder.slice(0, fullMainOrder.indexOf(endId) + 1);
+      }} else if (capitalOrder.includes(endId)) {{
+        path = [...fullMainOrder, ...capitalOrder.slice(0, capitalOrder.indexOf(endId) + 1)];
+      }} else if (tenthOrder.includes(endId)) {{
+        path = [...fullMainOrder, ...tenthOrder.slice(0, tenthOrder.indexOf(endId) + 1)];
+      }}
+      path = path.filter((v, i, a) => a.indexOf(v) === i);
+      return Math.max(1, path.length);
+    }}
+
+    // Format human-friendly duration text (e.g., ساعة وربع، ساعة ونصف، ساعتين)
+    function formatHumanDuration(totalMins) {{
+      if (totalMins <= 0) return "0 دقيقة";
+      const h = Math.floor(totalMins / 60);
+      const m = totalMins % 60;
+      
+      let label = "";
+      if (h === 0) {{
+        label = `${{m}} دقيقة`;
+      }} else if (h === 1) {{
+        if (m === 0) label = "ساعة واحدة تماماً";
+        else if (m >= 12 && m <= 18) label = "ساعة وربع تقريباً";
+        else if (m >= 25 && m <= 35) label = "ساعة ونصف تقريباً";
+        else if (m >= 40 && m <= 50) label = "ساعة إلا ربع تقريباً (ساعة و 45 د)";
+        else label = `ساعة و ${{m}} دقيقة`;
+      }} else if (h === 2) {{
+        if (m === 0) label = "ساعتان تماماً";
+        else if (m >= 12 && m <= 18) label = "ساعتان وربع تقريباً";
+        else if (m >= 25 && m <= 35) label = "ساعتان ونصف تقريباً";
+        else label = `ساعتان و ${{m}} دقيقة`;
+      }} else {{
+        label = `${{h}} ساعات و ${{m}} دقيقة`;
+      }}
+      return `${{label}} (${{totalMins}} دقيقة)`;
+    }}
+
+    // Global share card data
+    let currentShareData = null;
+
+    // -------------------------------------------------------------
+    // SMART TRANSFER GUARANTEE (هل هلحق قطار العاصمة من المترو؟)
+    // -------------------------------------------------------------
+    async function calculateSmartTransfer() {{
+      const startSelectVal = transferMetroStation.value;
+      const endSelectVal = transferLrtStation.value;
+
+      transferResultContainer.innerHTML = `
+        <div class="p-6 bg-slate-800/80 rounded-2xl border border-slate-700 text-center text-xs flex items-center justify-center gap-2">
+          <i data-lucide="loader" class="w-5 h-5 animate-spin text-amber-400"></i>
+          <span>جارٍ فحص جداول قطارات المترو وقطار العاصمة وحساب توقيتات الربط بدقة في الاتجاهين...</span>
+        </div>
+      `;
+      lucide.createIcons();
+
+      const now = new Date();
+      const nowH = now.getHours();
+      const nowM = now.getMinutes();
+      const nowTotalMins = nowH * 60 + nowM;
+
+      let userPlatformMins = nowTotalMins;
+      let leg1DepMins = nowTotalMins;
+      let startDescription = "";
+      let platformNote = "";
+
+      if (currentTransferDir === 'metro_to_lrt') {{
+        // DIRECTION 1: Metro -> LRT
+        const metroId = startSelectVal;
+        const lrtDestId = endSelectVal;
+        const metroObj = METRO_LINE3_STATIONS.find(s => s.id === metroId) || {{ name: "محطة المترو" }};
+        const lrtDestObj = LRT_STATIONS.find(s => s.id === lrtDestId) || {{ name: "محطة قطار العاصمة" }};
+
+        if (currentTransferTimingMode === 'now') {{
+          userPlatformMins = nowTotalMins;
+          leg1DepMins = nowTotalMins;
+          startDescription = "ركوب مترو الخط الثالث الأخضر الآن";
+          platformNote = "أنت في المترو بالفعل بالدقيقة الحالية";
+        }} else if (currentTransferTimingMode === 'later') {{
+          const chosenTime = transferInputTime.value || `${{String(nowH).padStart(2,'0')}}:${{String(nowM).padStart(2,'0')}}`;
+          const [bH, bM] = chosenTime.split(':').map(Number);
+          userPlatformMins = bH * 60 + bM;
+          leg1DepMins = userPlatformMins + 2;
+          startDescription = "حركة مترو الخط الثالث الأخضر المجدول";
+          platformNote = `وصولك للرصيف: ${{formatTimeFromMinutes(userPlatformMins)}} (قبل القطار بـ 2 د)`;
+        }} else if (currentTransferTimingMode === 'next') {{
+          userPlatformMins = nowTotalMins;
+          const dateStr = `${{now.getFullYear()}}-${{String(now.getMonth()+1).padStart(2,'0')}}-${{String(now.getDate()).padStart(2,'0')}}`;
+          const timeStr = `${{String(nowH).padStart(2,'0')}}:${{String(nowM).padStart(2,'0')}}:00`;
+          try {{
+            const resp = await fetch(`/api/mobility?nbtimes=4&stop=${{metroId}}&reseau=&date=${{dateStr}}&heure=${{timeStr}}`);
+            const data = await resp.json();
+            const sched = (data && data.items && data.items['L3-57_1']) ? data.items['L3-57_1'].Schedule || [] : [];
+            if (sched.length > 0) {{
+              const depRaw = sched[0].DepTime || "";
+              const hhmm = depRaw.includes(" ") ? depRaw.split(" ")[1] : depRaw;
+              if (hhmm.includes(":")) {{
+                const [mH, mM] = hhmm.split(':').map(Number);
+                leg1DepMins = mH * 60 + mM;
+                startDescription = "المترو القادم للمحطة";
+                const waitMins = Math.max(0, leg1DepMins - userPlatformMins);
+                platformNote = `يصل رصيفك بعد ${{waitMins}} دقيقة تقريباً`;
+              }}
+            }} else {{
+              leg1DepMins = nowTotalMins + 4;
+              startDescription = "المترو القادم (خلال 4 د)";
+              platformNote = "المترو القادم خلال 4 دقائق";
+            }}
+          }} catch(e) {{
+            leg1DepMins = nowTotalMins + 4;
+            startDescription = "المترو القادم (خلال 4 د)";
+            platformNote = "المترو القادم خلال 4 دقائق";
+          }}
+        }}
+
+        const metroRideMins = METRO_TO_ADLY_MINS[metroId] ?? 20;
+        const adlyArrivalMins = leg1DepMins + metroRideMins;
+        const adlyArrivalStr = formatTimeFromMinutes(adlyArrivalMins);
+
+        const transferWalkBuffer = 5;
+        const readyAtLrtPlatformMins = adlyArrivalMins + transferWalkBuffer;
+        const readyAtLrtPlatformStr = formatTimeFromMinutes(readyAtLrtPlatformMins);
+
+        const queryH = Math.floor(readyAtLrtPlatformMins / 60) % 24;
+        const queryM = readyAtLrtPlatformMins % 60;
+        const dateStr = `${{now.getFullYear()}}-${{String(now.getMonth()+1).padStart(2,'0')}}-${{String(now.getDate()).padStart(2,'0')}}`;
+        const timeStr = `${{String(queryH).padStart(2,'0')}}:${{String(queryM).padStart(2,'0')}}:00`;
+
+        let bestTrain = null;
+        let nextTrain = null;
+
+        try {{
+          const resp = await fetch(`/api/mobility?nbtimes=6&stop=139886&reseau=&date=${{dateStr}}&heure=${{timeStr}}`);
+          const data = await resp.json();
+          const lrtSchedules = (data && data.items && data.items['LRT-14_0']) ? data.items['LRT-14_0'].Schedule || [] : [];
+
+          for (const s of lrtSchedules) {{
+            const depRaw = s.DepTime || "";
+            const hhmm = depRaw.includes(" ") ? depRaw.split(" ")[1] : depRaw;
+            if (hhmm.includes(":")) {{
+              const [th, tm] = hhmm.split(':').map(Number);
+              const trainMins = th * 60 + tm;
+              const diff = trainMins - readyAtLrtPlatformMins;
+              if (diff >= 0 && !bestTrain) {{
+                bestTrain = {{ time12: formatTimeFromMinutes(trainMins), trainMins, diff }};
+              }} else if (diff >= 0 && bestTrain && !nextTrain) {{
+                nextTrain = {{ time12: formatTimeFromMinutes(trainMins), trainMins, diff }};
+                break;
+              }}
+            }}
+          }}
+        }} catch(e) {{}}
+
+        if (!bestTrain) {{
+          const fbMins = readyAtLrtPlatformMins + 7;
+          bestTrain = {{ time12: formatTimeFromMinutes(fbMins), trainMins: fbMins, diff: 7 }};
+          nextTrain = {{ time12: formatTimeFromMinutes(fbMins + 15), trainMins: fbMins + 15, diff: 22 }};
+        }}
+
+        const lrtRideMins = LRT_FROM_ADLY_MINS[lrtDestId] ?? 20;
+        const finalArrivalMins = bestTrain.trainMins + lrtRideMins;
+        const finalArrivalStr = formatTimeFromMinutes(finalArrivalMins);
+        const startTime12 = formatTimeFromMinutes(leg1DepMins);
+
+        const totalTripMinutes = finalArrivalMins - (currentTransferTimingMode === 'later' ? userPlatformMins : leg1DepMins);
+        const totalTripFormatted = formatHumanDuration(totalTripMinutes);
+
+        const metroStopsCount = getMetroStationsCount(metroId, "139886");
+        const lrtStopsCount = getLrtStationsCount(lrtDestId);
+
+        let statusBadge = bestTrain.diff >= 4 ? "✅ ستلحق القطار بكل راحة وأمان" : (bestTrain.diff >= 0 ? "⚠️ الوقت ضيق جداً (التبديل سريع)" : "❌ سيفوتك القطار الأول");
+        let statusBoxClass = bestTrain.diff >= 4 ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-100" : (bestTrain.diff >= 0 ? "bg-amber-950/60 border-amber-500/40 text-amber-100" : "bg-rose-950/60 border-rose-500/40 text-rose-100");
+        let adviceText = bestTrain.diff >= 4 
+          ? `سيكون معك <strong>${{bestTrain.diff + transferWalkBuffer}} دقيقة</strong> في محطة عدلي منصور للتبديل والتسوق أو الصعود للرصيف براحة تامة.`
+          : `ستصل الرصيف قبل تحرك القطار بـ <strong>${{bestTrain.diff}} دقائق</strong> فقط. إذا تأخرت فالقطار التالي لك هو قطار الساعة <strong>${{nextTrain ? nextTrain.time12 : '--:--'}}</strong>.`;
+
+        currentShareData = {{
+          dirLabel: "من مترو الخط الثالث الأخضر إلى قطار العاصمة الكهربائي",
+          startName: metroObj.name,
+          destName: lrtDestObj.name,
+          leg1Name: "مترو الخط الثالث الأخضر",
+          leg2Name: "قطار العاصمة الكهربائي",
+          leg1Dep: startTime12,
+          adlyArrival: adlyArrivalStr,
+          leg2Dep: bestTrain.time12,
+          finalArrival: finalArrivalStr,
+          totalDuration: totalTripFormatted,
+          leg1Stops: metroStopsCount,
+          leg2Stops: lrtStopsCount,
+          status: statusBadge
+        }};
+
+        renderBidirectionalCardUI({{
+          statusBadge, statusBoxClass, adviceText, nextTrain,
+          startTitle: metroObj.name, destTitle: lrtDestObj.name,
+          startDesc: startDescription, startTime12, platformNote,
+          adlyArrivalStr, leg1RideMins: metroRideMins, leg1Type: "المترو",
+          leg2Type: "قطار العاصمة", leg2Dep12: bestTrain.time12, readyPlatformStr: readyAtLrtPlatformStr,
+          finalArrivalStr, leg2RideMins: lrtRideMins,
+          stopsCount1: metroStopsCount, stopsType1: "محطات مترو الخط الثالث الأخضر", stopsNote1: "بين كل محطة ومحطة: 1.5 إلى 2 دقيقة", icon1: "subway",
+          stopsCount2: lrtStopsCount, stopsType2: "محطات قطار العاصمة الكهربائي", stopsNote2: "بين كل محطة ومحطة: 4 إلى 5 دقائق", icon2: "train",
+          totalTripFormatted
+        }});
+
+      }} else {{
+        // DIRECTION 2: LRT -> Metro
+        const lrtStartId = startSelectVal;
+        const metroDestId = endSelectVal;
+        const lrtStartObj = LRT_STATIONS.find(s => s.id === lrtStartId) || {{ name: "محطة قطار العاصمة" }};
+        const metroDestObj = METRO_LINE3_STATIONS.find(s => s.id === metroDestId) || {{ name: "محطة المترو" }};
+
+        if (currentTransferTimingMode === 'now') {{
+          userPlatformMins = nowTotalMins;
+          leg1DepMins = nowTotalMins;
+          startDescription = "ركوب قطار العاصمة الكهربائي الآن";
+          platformNote = "أنت في قطار العاصمة بالفعل بالدقيقة الحالية";
+        }} else if (currentTransferTimingMode === 'later') {{
+          const chosenTime = transferInputTime.value || `${{String(nowH).padStart(2,'0')}}:${{String(nowM).padStart(2,'0')}}`;
+          const [bH, bM] = chosenTime.split(':').map(Number);
+          userPlatformMins = bH * 60 + bM;
+          leg1DepMins = userPlatformMins + 2;
+          startDescription = "حركة قطار العاصمة المجدول";
+          platformNote = `وصولك للرصيف: ${{formatTimeFromMinutes(userPlatformMins)}} (قبل القطار بـ 2 د)`;
+        }} else if (currentTransferTimingMode === 'next') {{
+          userPlatformMins = nowTotalMins;
+          const dateStr = `${{now.getFullYear()}}-${{String(now.getMonth()+1).padStart(2,'0')}}-${{String(now.getDate()).padStart(2,'0')}}`;
+          const timeStr = `${{String(nowH).padStart(2,'0')}}:${{String(nowM).padStart(2,'0')}}:00`;
+          try {{
+            const resp = await fetch(`/api/mobility?nbtimes=4&stop=${{lrtStartId}}&reseau=&date=${{dateStr}}&heure=${{timeStr}}`);
+            const data = await resp.json();
+            const sched = (data && data.items && data.items['LRT-14_1']) ? data.items['LRT-14_1'].Schedule || [] : [];
+            if (sched.length > 0) {{
+              const depRaw = sched[0].DepTime || "";
+              const hhmm = depRaw.includes(" ") ? depRaw.split(" ")[1] : depRaw;
+              if (hhmm.includes(":")) {{
+                const [mH, mM] = hhmm.split(':').map(Number);
+                leg1DepMins = mH * 60 + mM;
+                startDescription = "قطار العاصمة القادم لعدلي منصور";
+                const waitMins = Math.max(0, leg1DepMins - userPlatformMins);
+                platformNote = `يصل رصيفك بعد ${{waitMins}} دقيقة تقريباً`;
+              }}
+            }} else {{
+              leg1DepMins = nowTotalMins + 5;
+              startDescription = "قطار العاصمة القادم (خلال 5 د)";
+              platformNote = "القطار القادم خلال 5 دقائق";
+            }}
+          }} catch(e) {{
+            leg1DepMins = nowTotalMins + 5;
+            startDescription = "قطار العاصمة القادم (خلال 5 د)";
+            platformNote = "القطار القادم خلال 5 دقائق";
+          }}
+        }}
+
+        const lrtRideMins = LRT_FROM_ADLY_MINS[lrtStartId] ?? 20;
+        const adlyArrivalMins = leg1DepMins + lrtRideMins;
+        const adlyArrivalStr = formatTimeFromMinutes(adlyArrivalMins);
+
+        const transferWalkBuffer = 5;
+        const readyAtMetroPlatformMins = adlyArrivalMins + transferWalkBuffer;
+        const readyAtMetroPlatformStr = formatTimeFromMinutes(readyAtMetroPlatformMins);
+
+        const queryH = Math.floor(readyAtMetroPlatformMins / 60) % 24;
+        const queryM = readyAtMetroPlatformMins % 60;
+        const dateStr = `${{now.getFullYear()}}-${{String(now.getMonth()+1).padStart(2,'0')}}-${{String(now.getDate()).padStart(2,'0')}}`;
+        const timeStr = `${{String(queryH).padStart(2,'0')}}:${{String(queryM).padStart(2,'0')}}:00`;
+
+        let bestTrain = null;
+        let nextTrain = null;
+
+        try {{
+          const resp = await fetch(`/api/mobility?nbtimes=6&stop=139886&reseau=&date=${{dateStr}}&heure=${{timeStr}}`);
+          const data = await resp.json();
+          const metroSchedules = (data && data.items && data.items['L3-57_0']) ? data.items['L3-57_0'].Schedule || [] : [];
+
+          for (const s of metroSchedules) {{
+            const depRaw = s.DepTime || "";
+            const hhmm = depRaw.includes(" ") ? depRaw.split(" ")[1] : depRaw;
+            if (hhmm.includes(":")) {{
+              const [th, tm] = hhmm.split(':').map(Number);
+              const trainMins = th * 60 + tm;
+              const diff = trainMins - readyAtMetroPlatformMins;
+              if (diff >= 0 && !bestTrain) {{
+                bestTrain = {{ time12: formatTimeFromMinutes(trainMins), trainMins, diff }};
+              }} else if (diff >= 0 && bestTrain && !nextTrain) {{
+                nextTrain = {{ time12: formatTimeFromMinutes(trainMins), trainMins, diff }};
+                break;
+              }}
+            }}
+          }}
+        }} catch(e) {{}}
+
+        if (!bestTrain) {{
+          const fbMins = readyAtMetroPlatformMins + 4;
+          bestTrain = {{ time12: formatTimeFromMinutes(fbMins), trainMins: fbMins, diff: 4 }};
+          nextTrain = {{ time12: formatTimeFromMinutes(fbMins + 7), trainMins: fbMins + 7, diff: 11 }};
+        }}
+
+        const metroRideMins = METRO_TO_ADLY_MINS[metroDestId] ?? 20;
+        const finalArrivalMins = bestTrain.trainMins + metroRideMins;
+        const finalArrivalStr = formatTimeFromMinutes(finalArrivalMins);
+        const startTime12 = formatTimeFromMinutes(leg1DepMins);
+
+        const totalTripMinutes = finalArrivalMins - (currentTransferTimingMode === 'later' ? userPlatformMins : leg1DepMins);
+        const totalTripFormatted = formatHumanDuration(totalTripMinutes);
+
+        const lrtStopsCount = getLrtStationsCount(lrtStartId);
+        const metroStopsCount = getMetroStationsCount("139886", metroDestId);
+
+        let statusBadge = bestTrain.diff >= 4 ? "✅ ستلحق المترو بكل راحة وأمان" : (bestTrain.diff >= 0 ? "⚠️ الوقت ضيق جداً (التبديل سريع)" : "❌ سيفوتك المترو الأول");
+        let statusBoxClass = bestTrain.diff >= 4 ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-100" : (bestTrain.diff >= 0 ? "bg-amber-950/60 border-amber-500/40 text-amber-100" : "bg-rose-950/60 border-rose-500/40 text-rose-100");
+        let adviceText = bestTrain.diff >= 4 
+          ? `سيكون معك <strong>${{bestTrain.diff + transferWalkBuffer}} دقيقة</strong> في محطة عدلي منصور للتبديل والنزول لرصيف المترو براحة تامة.`
+          : `ستصل رصيف المترو قبل تحرك القطار بـ <strong>${{bestTrain.diff}} دقائق</strong> فقط. إذا تأخرت فالمترو التالي لك هو قطار الساعة <strong>${{nextTrain ? nextTrain.time12 : '--:--'}}</strong>.`;
+
+        currentShareData = {{
+          dirLabel: "من قطار العاصمة الكهربائي إلى مترو الخط الثالث الأخضر",
+          startName: lrtStartObj.name,
+          destName: metroDestObj.name,
+          leg1Name: "قطار العاصمة الكهربائي",
+          leg2Name: "مترو الخط الثالث",
+          leg1Dep: startTime12,
+          adlyArrival: adlyArrivalStr,
+          leg2Dep: bestTrain.time12,
+          finalArrival: finalArrivalStr,
+          totalDuration: totalTripFormatted,
+          leg1Stops: lrtStopsCount,
+          leg2Stops: metroStopsCount,
+          status: statusBadge
+        }};
+
+        renderBidirectionalCardUI({{
+          statusBadge, statusBoxClass, adviceText, nextTrain,
+          startTitle: lrtStartObj.name, destTitle: metroDestObj.name,
+          startDesc: startDescription, startTime12, platformNote,
+          adlyArrivalStr, leg1RideMins: lrtRideMins, leg1Type: "قطار العاصمة",
+          leg2Type: "مترو الخط الثالث الأخضر", leg2Dep12: bestTrain.time12, readyPlatformStr: readyAtMetroPlatformStr,
+          finalArrivalStr, leg2RideMins: metroRideMins,
+          stopsCount1: lrtStopsCount, stopsType1: "محطات قطار العاصمة الكهربائي", stopsNote1: "بين كل محطة ومحطة: 4 إلى 5 دقائق", icon1: "train",
+          stopsCount2: metroStopsCount, stopsType2: "محطات مترو الخط الثالث الأخضر", stopsNote2: "بين كل محطة ومحطة: 1.5 إلى 2 دقيقة", icon2: "subway",
+          totalTripFormatted
+        }});
+      }}
+    }}
+
+    function renderBidirectionalCardUI(p) {{
+      transferResultContainer.innerHTML = `
+        <div id="transfer-card-snapshot" class="rounded-3xl p-5 sm:p-6 border transition-all ${{p.statusBoxClass}} shadow-2xl bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-slate-950">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+            <span class="text-sm sm:text-base font-black px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 shadow-xs">
+              ${{p.statusBadge}}
+            </span>
+            <span class="text-xs sm:text-sm font-bold text-white/90">
+              المسار الكلي: من <strong>${{p.startTitle}}</strong> إلى <strong>${{p.destTitle}}</strong>
+            </span>
+          </div>
+
+          <!-- Live Countdown Widget -->
+          <div class="mb-3.5 bg-black/60 border border-amber-500/40 rounded-2xl p-3 text-center">
+            <div class="flex items-center justify-center gap-2 mb-1">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-xs font-bold text-amber-300">العداد التنازلي المباشر للرحلة (محدث ثانية بثانية):</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
+              <div class="bg-slate-900/70 border border-white/10 rounded-xl p-2">
+                <span class="block text-xs text-slate-300 mb-0.5">⏳ متبقي على تحرك قطار البداية:</span>
+                <span id="live-trip-dep-timer" class="text-2xl font-black font-mono text-amber-400">--:--</span>
+              </div>
+              <div class="bg-slate-900/70 border border-white/10 rounded-xl p-2">
+                <span class="block text-xs text-slate-300 mb-0.5">🏁 متبقي على وصولك لمحطتك النهائية:</span>
+                <span id="live-trip-arr-timer" class="text-2xl font-black font-mono text-emerald-400">--:--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline 4 Uniform Blocks -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 my-3">
+            <!-- Block 1 -->
+            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
+              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+                <span>1.</span>
+                <span>${{p.startDesc}}</span>
+              </span>
+              <div class="my-2">
+                <div class="font-mono font-black text-2xl sm:text-3xl text-white tracking-wide">${{p.startTime12}}</div>
+              </div>
+              <div class="text-xs font-bold text-slate-300 border-t border-white/10 pt-2 flex flex-col">
+                <span>${{p.startTitle}}</span>
+                ${{p.platformNote ? `<span class="text-[10px] text-amber-300 font-normal mt-0.5">${{p.platformNote}}</span>` : ''}}
+              </div>
+            </div>
+
+            <!-- Block 2 -->
+            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
+              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+                <span>2.</span>
+                <span>الوصول لعدلي منصور</span>
+              </span>
+              <div class="my-2">
+                <div class="font-mono font-black text-2xl sm:text-3xl text-sky-300 tracking-wide">${{p.adlyArrivalStr}}</div>
+              </div>
+              <div class="text-xs font-bold text-slate-300 border-t border-white/10 pt-2">زمن ${{p.leg1Type}}: ${{p.leg1RideMins}} دقيقة</div>
+            </div>
+
+            <!-- Block 3 -->
+            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
+              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+                <span>3.</span>
+                <span>حركة ${{p.leg2Type}}</span>
+              </span>
+              <div class="my-2">
+                <div class="font-mono font-black text-2xl sm:text-3xl text-amber-300 tracking-wide">${{p.leg2Dep12}}</div>
+              </div>
+              <div class="text-xs font-bold text-amber-200 border-t border-white/10 pt-2">جاهز بالرصيف: ${{p.readyPlatformStr}}</div>
+            </div>
+
+            <!-- Block 4 -->
+            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
+              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+                <span>4.</span>
+                <span>الوصول لوجهتك النهائية</span>
+              </span>
+              <div class="my-2">
+                <div class="font-mono font-black text-2xl sm:text-3xl text-emerald-300 tracking-wide">${{p.finalArrivalStr}}</div>
+              </div>
+              <div class="text-xs font-bold text-slate-300 border-t border-white/10 pt-2">${{p.destTitle}} (رحلة ${{p.leg2Type}}: ${{p.leg2RideMins}} د)</div>
+            </div>
+          </div>
+
+          <!-- Detail Stats Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 my-3.5">
+            <div class="bg-indigo-950/50 border border-indigo-700/50 rounded-2xl p-3.5 flex items-center gap-3">
+              <span class="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                <i data-lucide="${{p.icon1}}" class="w-5 h-5"></i>
+              </span>
+              <div>
+                <div class="text-xs text-indigo-200 font-bold">${{p.stopsType1}}</div>
+                <div class="text-xl font-black text-white font-mono mt-0.5">${{p.stopsCount1}} <span class="text-xs font-normal">محطة</span></div>
+                <div class="text-[10px] text-indigo-300/80 mt-0.5">${{p.stopsNote1}}</div>
+              </div>
+            </div>
+
+            <div class="bg-teal-950/50 border border-teal-700/50 rounded-2xl p-3.5 flex items-center gap-3">
+              <span class="p-2.5 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                <i data-lucide="${{p.icon2}}" class="w-5 h-5"></i>
+              </span>
+              <div>
+                <div class="text-xs text-teal-200 font-bold">${{p.stopsType2}}</div>
+                <div class="text-xl font-black text-white font-mono mt-0.5">${{p.stopsCount2}} <span class="text-xs font-normal">محطة</span></div>
+                <div class="text-[10px] text-teal-300/80 mt-0.5">${{p.stopsNote2}}</div>
+              </div>
+            </div>
+
+            <div class="bg-amber-950/50 border border-amber-700/50 rounded-2xl p-3.5 flex items-center gap-3">
+              <span class="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <i data-lucide="hourglass" class="w-5 h-5"></i>
+              </span>
+              <div>
+                <div class="text-xs text-amber-200 font-bold">إجمالي وقت الرحلة المشتركة</div>
+                <div class="text-base sm:text-lg font-black text-amber-300 font-mono mt-0.5">${{p.totalTripFormatted}}</div>
+                <div class="text-[10px] text-amber-200/80 mt-0.5">شاملاً الركوب والتبديل والوصول</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Tip Box -->
+          <div class="mt-3 text-xs sm:text-sm leading-relaxed p-3.5 bg-black/40 rounded-xl border border-white/15 flex items-start gap-2.5">
+            <i data-lucide="info" class="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5"></i>
+            <div>
+              <span class="font-semibold text-slate-100">${{p.adviceText}}</span>
+              ${{p.nextTrain ? `<span class="block text-xs sm:text-sm text-slate-300 font-medium mt-1.5">💡 القطار البديل التالي يتحرك من رصيف عدلي منصور الساعة <strong>${{p.nextTrain.time12}}</strong>.</span>` : ''}}
+            </div>
+          </div>
+
+          <!-- Watermark -->
+          <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+            <span>شبكة النقل الذكية: قطار العاصمة الكهربائي ومترو الخط الثالث</span>
+            <span>capitaltrain.tafawuq-edu.site</span>
+          </div>
+        </div>
+
+        <!-- Sharing Bar -->
+        <div class="mt-4 p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-200">
+            <i data-lucide="share-2" class="w-4 h-4 text-amber-400"></i>
+            <span>مشاركة بطاقة مسار الرحلة:</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="shareTripCard('whatsapp')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>واتساب</span>
+            </button>
+            <button onclick="shareTripCard('telegram')" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>تليجرام</span>
+            </button>
+            <button onclick="shareTripCard('facebook')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+              <i data-lucide="share" class="w-4 h-4"></i>
+              <span>فيسبوك</span>
+            </button>
+            <button onclick="downloadTripCardImage()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition shadow-sm">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>تحميل كصورة 📷</span>
+            </button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }}
+
+    // Share Handler Functions
+    window.shareTripCard = function(platform) {{
+      if (!currentShareData) return;
+      const d = currentShareData;
+      const text = `🚆 *جدول ومواعيد رحلتي المشتركة: (${{d.dirLabel}})* 🚆\n` +
+        `📍 من: *${{d.startName}}* (${{d.leg1Name}})\n` +
+        `🎯 إلى: *${{d.destName}}* (${{d.leg2Name}})\n` +
+        `----------------------------\n` +
+        `1️⃣ حركة ${{d.leg1Name}}: *${{d.leg1Dep}}* (${{d.leg1Stops}} محطة)\n` +
+        `2️⃣ الوصول لعدلي منصور: *${{d.adlyArrival}}*\n` +
+        `3️⃣ حركة ${{d.leg2Name}}: *${{d.leg2Dep}}* (${{d.leg2Stops}} محطة)\n` +
+        `4️⃣ الوصول لوجهتك: *${{d.finalArrival}}*\n` +
+        `----------------------------\n` +
+        `⏱️ إجمالي زمن الرحلة: *${{d.totalDuration}}*\n` +
+        `💡 الحالة: *${{d.status}}*\n\n` +
+        `🔗 احسب رحلتك الآن: https://capitaltrain.tafawuq-edu.site`;
+
+      const encodedText = encodeURIComponent(text);
+      const url = encodeURIComponent("https://capitaltrain.tafawuq-edu.site");
+
+      if (platform === 'whatsapp') {{
+        window.open(`https://api.whatsapp.com/send?text=${{encodedText}}`, '_blank');
+      }} else if (platform === 'telegram') {{
+        window.open(`https://t.me/share/url?url=${{url}}&text=${{encodedText}}`, '_blank');
+      }} else if (platform === 'facebook') {{
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${{url}}&quote=${{encodedText}}`, '_blank');
+      }}
+    }};
+
+    // Download Card as PNG Image
+    window.downloadTripCardImage = function() {{
+      const cardEl = document.getElementById('transfer-card-snapshot');
+      if (!cardEl || typeof html2canvas === 'undefined') {{
+        alert("يرجى الانتظار حتى اكتمال تحميل أداة التقاط الصور");
+        return;
+      }}
+      html2canvas(cardEl, {{
+        backgroundColor: '#090d16',
+        scale: 2,
+        useCORS: true
+      }}).then(canvas => {{
+        const link = document.createElement('a');
+        link.download = `مسار-الرحلة-${{Date.now()}}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }}).catch(err => {{
+        console.error("Error creating card image:", err);
+        alert("حدث خطأ أثناء تحميل الصورة، يرجى المحاولة مرة أخرى.");
+      }});
+    }};
+
+    // Preset Modal Setup
+    const modalPreset = document.getElementById('modal-preset');
+    const btnOpenModalPreset = document.getElementById('btn-open-modal-preset');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnCancelModal = document.getElementById('btn-cancel-modal');
+    const btnSavePresetConfirm = document.getElementById('btn-save-preset-confirm');
+    const presetTitleInput = document.getElementById('preset-title-input');
+    const iconPickerGrid = document.getElementById('icon-picker-grid');
+    const modalStationName = document.getElementById('modal-station-name');
+    const modalDirectionName = document.getElementById('modal-direction-name');
+    const modalTimeName = document.getElementById('modal-time-name');
+
+    const PRESET_ICONS = [
+      {{ emoji: "💼", label: "الذهاب للعمل" }},
+      {{ emoji: "🏠", label: "العودة للبيت" }},
+      {{ emoji: "🌅", label: "صباحي" }},
+      {{ emoji: "🌇", label: "مسائي" }},
+      {{ emoji: "🎓", label: "جامعة / دراسة" }},
+      {{ emoji: "🏋️", label: "تمرين / رياضة" }},
+      {{ emoji: "🛍️", label: "تسوق" }},
+      {{ emoji: "✈️", label: "مطار / سفر" }},
+      {{ emoji: "🎨", label: "ثقافة وفنون" }},
+      {{ emoji: "💡", label: "معرفة" }},
+      {{ emoji: "🚇", label: "مترو" }},
+      {{ emoji: "🚄", label: "قطار سريع" }}
+    ];
+    let selectedIcon = "💼";
+
+    function renderIconPicker() {{
+      iconPickerGrid.innerHTML = '';
+      PRESET_ICONS.forEach(item => {{
+        const btn = document.createElement('button');
+        btn.type = "button";
+        const isSel = item.emoji === selectedIcon;
+        btn.className = `p-2 text-xl rounded-xl border flex items-center justify-center transition ${{
+          isSel 
+            ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 scale-110 shadow-xs' 
+            : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+        }}`;
+        btn.innerHTML = item.emoji;
+        btn.title = item.label;
+        btn.onclick = () => {{
+          selectedIcon = item.emoji;
+          renderIconPicker();
+        }};
+        iconPickerGrid.appendChild(btn);
+      }});
+    }}
+
+    btnOpenModalPreset.addEventListener('click', () => {{
+      const stName = selectStation.options[selectStation.selectedIndex].text;
+      const destName = selectDestStation.options[selectDestStation.selectedIndex].text;
+      const {{ dir, dirLabel }} = updateDirectionUI();
+      const timeVal = inputTime.value || "08:00";
+
+      modalStationName.textContent = stName;
+      modalDirectionName.textContent = `${{destName}} (${{dirLabel}})`;
+      modalTimeName.textContent = convert24to12(timeVal);
+
+      presetTitleInput.value = `من ${{stName.split('[')[0].trim()}} إلى ${{destName.split('[')[0].trim()}}`;
+      renderIconPicker();
+      modalPreset.classList.remove('hidden');
+    }});
+
+    function closeModal() {{
+      modalPreset.classList.add('hidden');
+    }}
+    btnCloseModal.addEventListener('click', closeModal);
+    btnCancelModal.addEventListener('click', closeModal);
+
+    btnSavePresetConfirm.addEventListener('click', () => {{
+      const title = presetTitleInput.value.trim() || "رحلتي";
+      const stName = selectStation.options[selectStation.selectedIndex].text.split('[')[0].trim();
+      const destName = selectDestStation.options[selectDestStation.selectedIndex].text.split('[')[0].trim();
+      const {{ dir, dirLabel }} = updateDirectionUI();
+      const timeVal = inputTime.value || "08:00";
+      const time12 = convert24to12(timeVal);
+
+      const newPreset = {{
+        id: 'p_' + Date.now(),
+        icon: selectedIcon,
+        title: title,
+        stationId: selectStation.value,
+        destStationId: selectDestStation.value,
+        time: timeVal,
+        label: `${{stName}} ⬅️ ${{destName}} (${{time12}})`
+      }};
+
+      const presets = getSavedPresets();
+      presets.push(newPreset);
+      localStorage.setItem(getPresetsStorageKey(), JSON.stringify(presets));
+      renderPresets();
+      closeModal();
+    }});
+
+    // Event Listeners
+    selectStation.addEventListener('change', () => {{
+      updateDirectionUI();
+      fetchDepartures();
+    }});
+    selectDestStation.addEventListener('change', () => {{
+      updateDirectionUI();
+      fetchDepartures();
+    }});
+    inputTime.addEventListener('change', fetchDepartures);
+    btnUseNow.addEventListener('click', () => {{
+      setCurrentTime();
+      fetchDepartures();
+    }});
+    btnPinPrefs.addEventListener('click', savePreferences);
+    btnRefresh.addEventListener('click', fetchDepartures);
+
+    calcStart.addEventListener('change', calculateTrip);
+    calcEnd.addEventListener('change', calculateTrip);
+
+    // Calculation triggers ONLY via btnCalcTransfer to prevent server overload and allow calm selection
+    btnCalcTransfer.addEventListener('click', calculateSmartTransfer);
+
+    // Initial Execution
+    switchNetworkMode(currentMode);
+    populateTransferDropdowns();
+    calculateSmartTransfer();
+  </script>
+</body>
+</html>
+'''
+
+with open('I:/CapitalTrain/index.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("Updated index.html with 3 departure modes, 12h format and bigger unified blocks successfully!")

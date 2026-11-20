@@ -1,0 +1,37 @@
+{
+  "line_name_ar": "القطار الكهربائي الخفيف (LRT) - قطار العاصمة",
+  "line_name_en": "Light Rail Transit (LRT) - Capital Train",
+  "operator": "RATP Dev Mobility Cairo",
+  "hotline": "19549",
+  "whatsapp": "01103776770",
+  "fare_rules": [
+    { "max_stations": 3, "ticket_price_egp": 10, "monthly_pass_egp": 300 },
+    { "max_stations": 7, "ticket_price_egp": 15, "monthly_pass_egp": 500 },
+    { "max_stations": 999, "ticket_price_egp": 20, "monthly_pass_egp": 600 }
+  ],
+  "headway_schedule": [
+    { "start_time": "06:00", "end_time": "07:00", "headway_minutes": 15 },
+    { "start_time": "07:00", "end_time": "10:00", "headway_minutes": 10, "is_peak": true },
+    { "start_time": "10:00", "end_time": "14:00", "headway_minutes": 15 },
+    { "start_time": "14:00", "end_time": "17:30", "headway_minutes": 10, "is_peak": true },
+    { "start_time": "17:30", "end_time": "21:00", "headway_minutes": 15 },
+    { "start_time": "21:00", "end_time": "23:40", "headway_minutes": 20 }
+  ],
+  "first_train": "06:00",
+  "last_train_full": "23:20",
+  "last_train_to_badr": "23:40",
+  "stations": [
+    { "id": "adly_mansour", "name_ar": "عدلي منصور", "name_en": "Adly Mansour", "branch": "main", "is_interchange": true, "connections": ["Metro Line 3", "Superjet", "ENR Railway"], "index": 0, "travel_time_from_prev": 0 },
+    { "id": "el_obour", "name_ar": "العبور", "name_en": "El Obour", "branch": "main", "is_interchange": false, "connections": [], "index": 1, "travel_time_from_prev": 6 },
+    { "id": "el_mostakbal", "name_ar": "المستقبل", "name_en": "El Mostakbal", "branch": "main", "is_interchange": false, "connections": [], "index": 2, "travel_time_from_prev": 5 },
+    { "id": "el_shorouk", "name_ar": "الشروق", "name_en": "El Shorouk", "branch": "main", "is_interchange": false, "connections": [], "index": 3, "travel_time_from_prev": 6 },
+    { "id": "new_heliopolis", "name_ar": "نيو هليوبوليس", "name_en": "New Heliopolis", "branch": "main", "is_interchange": false, "connections": [], "index": 4, "travel_time_from_prev": 6 },
+    { "id": "badr", "name_ar": "بدر", "name_en": "Badr", "branch": "junction", "is_interchange": true, "connections": ["Branch Transfer: New Capital / 10th of Ramadan"], "index": 5, "travel_time_from_prev": 7 },
+    { "id": "el_robaikey", "name_ar": "الروبيكي", "name_en": "El Robaikey", "branch": "capital", "is_interchange": false, "connections": [], "index": 6, "travel_time_from_prev": 5 },
+    { "id": "capital_gardens", "name_ar": "حدائق العاصمة", "name_en": "Capital Gardens", "branch": "capital", "is_interchange": false, "connections": [], "index": 7, "travel_time_from_prev": 6 },
+    { "id": "capital_airport", "name_ar": "مطار العاصمة", "name_en": "Capital Airport", "branch": "capital", "is_interchange": false, "connections": [], "index": 8, "travel_time_from_prev": 5 },
+    { "id": "arts_and_culture", "name_ar": "مدينة الفنون والثقافة", "name_en": "Arts & Culture City", "branch": "capital", "is_interchange": true, "connections": ["New Administrative Capital Monorail (Soon)"], "index": 9, "travel_time_from_prev": 6 },
+    { "id": "industrial_zone", "name_ar": "المنطقة الصناعية", "name_en": "Industrial Zone", "branch": "ramadan", "is_interchange": false, "connections": [], "index": 10, "travel_time_from_prev": 6 },
+    { "id": "knowledge_city", "name_ar": "مدينة المعرفة", "name_en": "Knowledge City", "branch": "ramadan", "is_interchange": false, "connections": [], "index": 11, "travel_time_from_prev": 5 }
+  ]
+}

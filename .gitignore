@@ -1,0 +1,23 @@
+# Git ignore for CapitalTrain
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+backups/
+downloads/
+temp_audio/
+android_build_src/
+*.log
+*.png
+*.wav
+*.mp3
+*.apk
+*.zip
+*.tmp
+*.bak*
+LIVE_TUNNELS.txt
+url_*.txt
+ALL_URLS.txt

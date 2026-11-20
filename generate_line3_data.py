@@ -1,0 +1,55 @@
+import json
+
+# Official Stations of Cairo Metro Line 3 (الخط الأخضر 3)
+# Operated by RATP Dev Mobility Cairo
+# Main trunk from Adly Mansour to Kit Kat (23 stations)
+# Branch 1 from Kit Kat to Rod El Farag Corridor (4 stations)
+# Branch 2 from Kit Kat to Cairo University (5 stations)
+# Total: 34 stations
+
+METRO_LINE3_STATIONS = [
+  # Main Line (من عدلي منصور حتى الكيت كات)
+  {"id": "139886", "name": "عدلي منصور", "branch": "main", "order": 1, "interchange": "LRT + قطار السويس + السوبرجيت"},
+  {"id": "139913", "name": "الهايكستب", "branch": "main", "order": 2},
+  {"id": "139911", "name": "عمر بن الخطاب", "branch": "main", "order": 3},
+  {"id": "139914", "name": "قباء", "branch": "main", "order": 4},
+  {"id": "139901", "name": "هشام بركات", "branch": "main", "order": 5},
+  {"id": "139915", "name": "النزهة", "branch": "main", "order": 6},
+  {"id": "139919", "name": "نادي الشمس", "branch": "main", "order": 7},
+  {"id": "139889", "name": "ألف مسكن", "branch": "main", "order": 8},
+  {"id": "139900", "name": "ميدان هليوبوليس", "branch": "main", "order": 9},
+  {"id": "139899", "name": "هارون", "branch": "main", "order": 10},
+  {"id": "139887", "name": "الأهرام", "branch": "main", "order": 11},
+  {"id": "139905", "name": "كلية البنات", "branch": "main", "order": 12},
+  {"id": "139921", "name": "الاستاد", "branch": "main", "order": 13, "interchange": "مونوريل شرق النيل"},
+  {"id": "139893", "name": "أرض المعارض", "branch": "main", "order": 14},
+  {"id": "139883", "name": "العباسية", "branch": "main", "order": 15},
+  {"id": "139884", "name": "عبده باشا", "branch": "main", "order": 16},
+  {"id": "139897", "name": "الجيش", "branch": "main", "order": 17},
+  {"id": "139891", "name": "باب الشعرية", "branch": "main", "order": 18},
+  {"id": "139890", "name": "العتبة", "branch": "main", "order": 19, "interchange": "الخط الثاني (شبرا - المنيب)"},
+  {"id": "139909", "name": "جمال عبد الناصر", "branch": "main", "order": 20, "interchange": "الخط الأول (المرج - حلوان)"},
+  {"id": "139908", "name": "ماسبيرو", "branch": "main", "order": 21},
+  {"id": "139918", "name": "صفاء حجازي (الزمالك)", "branch": "main", "order": 22},
+  {"id": "139906", "name": "الكيت كات", "branch": "main", "order": 23, "interchange": "نقطة التفرع لفرعي روض الفرج وجامعة القاهرة"},
+
+  # Branch A: روض الفرج (تتفرع من الكيت كات)
+  {"id": "139922", "name": "السودان", "branch": "rod_elfarag", "order": 24},
+  {"id": "139903", "name": "إمبابة", "branch": "rod_elfarag", "order": 25},
+  {"id": "139895", "name": "البوهي", "branch": "rod_elfarag", "order": 26},
+  {"id": "139894", "name": "القومية العربية", "branch": "rod_elfarag", "order": 27},
+  {"id": "139902", "name": "الطريق الدائري", "branch": "rod_elfarag", "order": 28, "interchange": "الأتوبيس الترددي BRT"},
+  {"id": "139917", "name": "محور روض الفرج", "branch": "rod_elfarag", "order": 29},
+
+  # Branch B: جامعة القاهرة (تتفرع من الكيت كات)
+  {"id": "139999", "name": "التوفيقية", "branch": "cairo_univ", "order": 24},
+  {"id": "140001", "name": "وادي النيل", "branch": "cairo_univ", "order": 25, "interchange": "مونوريل غرب النيل (6 أكتوبر)"},
+  {"id": "139998", "name": "جامعة الدول العربية", "branch": "cairo_univ", "order": 26},
+  {"id": "139997", "name": "بولاق الدكرور", "branch": "cairo_univ", "order": 27},
+  {"id": "140000", "name": "جامعة القاهرة", "branch": "cairo_univ", "order": 28, "interchange": "الخط الثاني للمترو"}
+]
+
+with open("metro_line3_official_stops.json", "w", encoding="utf-8") as out:
+    json.dump(METRO_LINE3_STATIONS, out, ensure_ascii=False, indent=2)
+
+print("Saved metro_line3_official_stops.json with", len(METRO_LINE3_STATIONS), "stations!")

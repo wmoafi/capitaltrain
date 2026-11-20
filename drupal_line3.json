@@ -1,0 +1,75 @@
+{
+  "path": {
+    "baseUrl": "/",
+    "pathPrefix": "ar/",
+    "currentPath": "node/83",
+    "currentPathIsAdmin": false,
+    "isFront": false,
+    "currentLanguage": "ar"
+  },
+  "pluralDelimiter": "\u0003",
+  "suppressDeprecationErrors": true,
+  "gtag": {
+    "tagId": "",
+    "consentMode": false,
+    "otherIds": [],
+    "events": [],
+    "additionalConfigInfo": []
+  },
+  "ajaxPageState": {
+    "libraries": "eJx9U8tuAzEI_KF9fEwPPVasTbw0trEA5_H39W6aRGnlXJCZAQsGAKPLV7H1NKtb0deIX5HBD_DAbUVJnNBQBgfF3ArzAoqDY8HZcSqcMZtO4r2OI7iGe-Lc4RdB8E5qWnoBVQLKmDDXTgS57u-R8vFdauTAHSphgHepGzUqpRJ7rSdUhdBjlQzHA_OuYz9ibfJ0IwwW7VGUr2PhQj1pjOxeuZdaIE7gjE64a_aCe-GyVLOmMl5K3BkwiHBtczEBd6QcHlSIvEB8uLf6WxsUVhsCc2grZRDm0Mxff4JvuLyCaSggEATKqveCnshUc6lLJG27Omx9ze6InoxlOghnu2ERcqhtEh9nauva1NzRzUxPWQZFCcT3-n-9bcq7AJ7P-Q6qE45xAfkkb-ugVzVMtyOwKlmNIs6P162pE-FZ593-BxJvl_YD9KNWhQ",
+    "theme": "explore",
+    "theme_token": null
+  },
+  "ajaxTrustedUrl": {
+    "form_action_p_pvdeGsVG5zNF_XLGPTvYSKCf43t8qZYSwcfZl2uzM": true,
+    "/ar/search/node": true
+  },
+  "gtm": {
+    "tagId": null,
+    "settings": {
+      "data_layer": "dataLayer",
+      "include_environment": false
+    },
+    "tagIds": [
+      "GTM-PG4CR6H"
+    ]
+  },
+  "rdds": {
+    "useRdds": true,
+    "breakpoints": {
+      "rdds.narrow": "(max-width: 720px)",
+      "rdds.standard": "(min-width: 720px)",
+      "rdds.wide": "only screen and (min-width: 1280px)"
+    },
+    "components": {
+      "rdds:message": "\n\n  <div data-component-id=\"rdds:message\" class=\"message message--status\">\n    <div class=\"message__top\">\n            \n\n\n<svg  data-component-id=\"rdds:icon\" class=\"icon icon--lg not-actionable\" tabindex=\"-1\" role=\"img\" aria-hidden=\"true\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3ZM1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12ZM11 8C11 7.44772 11.4477 7 12 7H12.01C12.5623 7 13.01 7.44772 13.01 8C13.01 8.55228 12.5623 9 12.01 9H12C11.4477 9 11 8.55228 11 8ZM12 11C12.5523 11 13 11.4477 13 12V16C13 16.5523 12.5523 17 12 17C11.4477 17 11 16.5523 11 16V12C11 11.4477 11.4477 11 12 11Z\" fill=\"currentColor\"/>\n</svg>\n\n      <button class=\"message__close\">\n        <span>إغلاق</span>\n              \n\n\n<svg  data-component-id=\"rdds:icon\" class=\"icon icon--md not-actionable\" tabindex=\"-1\" role=\"img\" aria-hidden=\"true\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<g id=\"x-close\">\n<path id=\"Path\" fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L12 10.5858L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L13.4142 12L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L12 13.4142L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L10.5858 12L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289Z\" fill=\"currentColor\"/>\n</g>\n</svg>\n\n      </button>\n    </div>\n    <div class=\"message__content\" role=\"paragraph\">\n          <div data-replace-by-message></div>\n  \n    </div>\n  </div>\n"
+    }
+  },
+  "langcode": "ar",
+  "explore": {
+    "messageAutoClose": 0,
+    "isWidgetsV2": false
+  },
+  "views": {
+    "ajax_path": "/ar/views/ajax",
+    "ajaxViews": {
+      "views_dom_id:2862dab0ea9944674ce9789f57fd6f90051cab08d695be0a6d629cfb43853025": {
+        "view_name": "alertes_infos",
+        "view_display_id": "block_ligne_alertes",
+        "view_args": "83",
+        "view_path": "/node/83",
+        "view_base_path": null,
+        "view_dom_id": "2862dab0ea9944674ce9789f57fd6f90051cab08d695be0a6d629cfb43853025",
+        "pager_element": 0
+      }
+    }
+  },
+  "atix_pthv": {
+    "scheduleAutocomplete": true
+  },
+  "user": {
+    "uid": 0,
+    "permissionsHash": "1be963a7d46b11d6f0a3b4b5659e0489795fe6f738fd3417a8639bcc3d109716"
+  }
+}
