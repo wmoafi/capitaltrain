@@ -86,6 +86,20 @@ import uuid
 from difflib import SequenceMatcher
 from datetime import datetime
 
+# Initialize Cairo Timezone
+os.environ['TZ'] = 'Africa/Cairo'
+if hasattr(time, 'tzset'):
+    time.tzset()
+try:
+    from zoneinfo import ZoneInfo
+    CAIRO_TZ = ZoneInfo("Africa/Cairo")
+except Exception:
+    from datetime import timezone, timedelta
+    CAIRO_TZ = timezone(timedelta(hours=2))
+
+def get_cairo_now():
+    return datetime.now(CAIRO_TZ)
+
 TOKEN = "9245350820:AAFSuiAZ7Z81Y_tBSZTAXNWoiLMUTltnXUg"
 BASE_URL = f"https://api.telegram.org/bot{{TOKEN}}/"
 MOBILITY_API = "https://www.mobilitycairo.com/ar/pthv/get"
@@ -289,18 +303,10 @@ def render_smart_transfer_card_image(info, output_path):
             </tr>
           </table>
 
-          <!-- 4 Step Cards (Right-to-Left: Cell 1 is Left = Step 2 / Step 4, Cell 2 is Right = Step 1 / Step 3) -->
+          <!-- 4 Step Cards (Right-to-Left: Cell 1 is Right = Step 1 / Step 3, Cell 2 is Left = Step 2 / Step 4) -->
           <table style="width: 100%; border-spacing: 8px; margin-bottom: 4px;">
             <tr>
-              <!-- Left Cell: Step 2 -->
-              <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
-                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">2. الوصول لعدلي منصور المركزية</div>
-                <div style="color: #38bdf8; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{{adly_arr}}</div>
-                <div style="color: #cbd5e1; font-size: 11.5px; border-top: 1px solid #1e293b; padding-top: 4px;">
-                  زمن الرحلة الأولى: {{leg1_ride}} دقيقة
-                </div>
-              </td>
-              <!-- Right Cell: Step 1 -->
+              <!-- Right Cell: Step 1 (First in DOM = Right in RTL) -->
               <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
                 <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">{{leg1_title}}</div>
                 <div style="color: #38bdf8; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{{leg1_dep}}</div>
@@ -308,17 +314,17 @@ def render_smart_transfer_card_image(info, output_path):
                   <b>{{start_name}}</b> (محطة الانطلاق الأولى)
                 </div>
               </td>
-            </tr>
-            <tr>
-              <!-- Left Cell: Step 4 -->
+              <!-- Left Cell: Step 2 (Second in DOM = Left in RTL) -->
               <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
-                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">4. الوصول لوجهتك النهائية</div>
-                <div style="color: #34d399; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{{final_arr}}</div>
+                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">2. الوصول لعدلي منصور المركزية</div>
+                <div style="color: #38bdf8; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{{adly_arr}}</div>
                 <div style="color: #cbd5e1; font-size: 11.5px; border-top: 1px solid #1e293b; padding-top: 4px;">
-                  <b>{{dest_name}}</b> (زمن الرحلة الثانية: {{leg2_ride}} د)
+                  زمن الرحلة الأولى: {{leg1_ride}} دقيقة
                 </div>
               </td>
-              <!-- Right Cell: Step 3 -->
+            </tr>
+            <tr>
+              <!-- Right Cell: Step 3 (First in DOM = Right in RTL) -->
               <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
                 <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">{{leg2_title}}</div>
                 <div style="color: #fbbf24; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{{leg2_dep}}</div>
@@ -326,26 +332,37 @@ def render_smart_transfer_card_image(info, output_path):
                   جاهز بالرصيف بعد التبديل: <b>{{ready_time}}</b>
                 </div>
               </td>
+              <!-- Left Cell: Step 4 (Second in DOM = Left in RTL) -->
+              <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
+                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">4. الوصول لوجهتك النهائية</div>
+                <div style="color: #34d399; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{{final_arr}}</div>
+                <div style="color: #cbd5e1; font-size: 11.5px; border-top: 1px solid #1e293b; padding-top: 4px;">
+                  <b>{{dest_name}}</b> (زمن الرحلة الثانية: {{leg2_ride}} د)
+                </div>
+              </td>
             </tr>
           </table>
 
-          <!-- 3 Stats Boxes: Cell 1 Left (Duration), Cell 2 Middle (Line 2), Cell 3 Right (Line 1) -->
+          <!-- 3 Stats Boxes: Cell 1 Right (Line 1), Cell 2 Middle (Line 2), Cell 3 Left (Total Duration) -->
           <table style="width: 100%; border-spacing: 8px; margin-bottom: 6px;">
             <tr>
-              <td style="width: 33.3%; background: #713f12; border: 1px solid #d97706; border-radius: 10px; padding: 8px 10px;">
-                <div style="color: #fef3c7; font-size: 11px; font-weight: bold;">إجمالي زمن الرحلة المشتركة</div>
-                <div style="color: #fde047; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{{total_time}} دقيقة</div>
-                <div style="color: #fef08a; font-size: 9px;">شاملاً الركوب والتبديل والوصول</div>
+              <!-- Right in RTL: Line 1 Stations -->
+              <td style="width: 33.3%; background: #134e4a; border: 1px solid #0d9488; border-radius: 10px; padding: 8px 10px;">
+                <div style="color: #ccfbf1; font-size: 11px; font-weight: bold;">{{stops1_lbl}}</div>
+                <div style="color: #ffffff; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{{stops1}} محطة</div>
+                <div style="color: #99f6e4; font-size: 9px;">{{note1}}</div>
               </td>
+              <!-- Middle in RTL: Line 2 Stations -->
               <td style="width: 33.3%; background: #1e1b4b; border: 1px solid #4338ca; border-radius: 10px; padding: 8px 10px;">
                 <div style="color: #c7d2fe; font-size: 11px; font-weight: bold;">{{stops2_lbl}}</div>
                 <div style="color: #ffffff; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{{stops2}} محطة</div>
                 <div style="color: #a5b4fc; font-size: 9px;">{{note2}}</div>
               </td>
-              <td style="width: 33.3%; background: #134e4a; border: 1px solid #0d9488; border-radius: 10px; padding: 8px 10px;">
-                <div style="color: #ccfbf1; font-size: 11px; font-weight: bold;">{{stops1_lbl}}</div>
-                <div style="color: #ffffff; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{{stops1}} محطة</div>
-                <div style="color: #99f6e4; font-size: 9px;">{{note1}}</div>
+              <!-- Left in RTL: Total Duration -->
+              <td style="width: 33.3%; background: #713f12; border: 1px solid #d97706; border-radius: 10px; padding: 8px 10px;">
+                <div style="color: #fef3c7; font-size: 11px; font-weight: bold;">إجمالي زمن الرحلة المشتركة</div>
+                <div style="color: #fde047; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{{total_time}} دقيقة</div>
+                <div style="color: #fef08a; font-size: 9px;">شاملاً الركوب والتبديل والوصول</div>
               </td>
             </tr>
           </table>
@@ -423,7 +440,7 @@ def format_time_12h(time_input):
     return f"{{h12:02d}}:{{m:02d}} {{period}}"
 
 def calculate_smart_transfer_info(direction, start_id, dest_id, timing_mode="now", custom_time=None):
-    now = datetime.now()
+    now = get_cairo_now()
     now_mins = now.hour * 60 + now.minute
 
     if timing_mode == "later" and custom_time and ":" in custom_time:
@@ -485,6 +502,8 @@ def calculate_smart_transfer_info(direction, start_id, dest_id, timing_mode="now
             "leg2_ride": leg2_ride,
             "final_arr": format_time_12h(final_arr_mins),
             "total_time": final_arr_mins - leg1_dep_mins,
+            "leg1_dep_mins": leg1_dep_mins,
+            "final_arr_mins": final_arr_mins,
             "stops1": get_network_station_count(start_id, "139886", network='metro'),
             "stops2": get_network_station_count("139886", dest_id, network='lrt')
         }}
@@ -540,6 +559,8 @@ def calculate_smart_transfer_info(direction, start_id, dest_id, timing_mode="now
             "leg2_ride": leg2_ride,
             "final_arr": format_time_12h(final_arr_mins),
             "total_time": final_arr_mins - leg1_dep_mins,
+            "leg1_dep_mins": leg1_dep_mins,
+            "final_arr_mins": final_arr_mins,
             "stops1": get_network_station_count(start_id, "139886", network='lrt'),
             "stops2": get_network_station_count("139886", dest_id, network='metro')
         }}
@@ -667,7 +688,7 @@ def transcribe_audio_whisper(wav_path):
     return res.stdout.strip() if res.returncode == 0 else ""
 
 def fetch_live_schedule_from_mobility_cairo(stop_id, direction_code, network='lrt'):
-    now = datetime.now()
+    now = get_cairo_now()
     date_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H:%M:%S")
 
@@ -716,7 +737,7 @@ def format_station_result(station_id, direction_code, deduced_dest=None, custom_
 
     dest_str = f" ⬅️ <b>{{deduced_dest['name']}}</b>" if deduced_dest else ""
 
-    now_dt = datetime.now()
+    now_dt = get_cairo_now()
     now_12h = format_time_12h(now_dt.hour * 60 + now_dt.minute)
 
     msg = f"{{net_title}}\\n📍 محطة الانطلاق: <b>{{station['name']}}</b>{{dest_str}}\\n{{dir_name}}\\n"
@@ -928,7 +949,7 @@ def reminder_scheduler_loop():
     last_checked_minute = ""
     while True:
         try:
-            now = datetime.now()
+            now = get_cairo_now()
             current_minute = now.strftime("%H:%M")
             weekday = now.weekday()
 
@@ -989,8 +1010,8 @@ def main():
                     if data == "transfer_direction_menu" or data == "transfer_metro_select":
                         kb = {{
                             "inline_keyboard": [
-                                [{{"text": "🚇 من مترو الخط الثالث ⬅️ إلى قطار العاصمة 🚆", "callback_data": "tf_dir:metro_to_lrt"}}],
-                                [{{"text": "🚆 من قطار العاصمة ⬅️ إلى مترو الخط الثالث 🚇", "callback_data": "tf_dir:lrt_to_metro"}}],
+                                [{{"text": "🚇 من مترو الخط الثالث الأخضر ⬅️ قطار العاصمة 🚆", "callback_data": "tf_dir:metro_to_lrt"}}],
+                                [{{"text": "🚆 من قطار العاصمة ⬅️ مترو الخط الثالث الأخضر 🚇", "callback_data": "tf_dir:lrt_to_metro"}}],
                                 [{{"text": "🏠 القائمة الرئيسية", "callback_data": "main_menu"}}]
                             ]
                         }}
@@ -1053,7 +1074,7 @@ def main():
                                         temp = []
                             if temp:
                                 rows.append(temp)
-                            title = f"🚇 محطة انطلاقك: <b>{{orig_name}}</b>\\n\\n🚆 <b>اختر محطة الوصول في قطار العاصمة (LRT):</b>"
+                            title = f"🚇 محطة انطلاقك: <b>{{orig_name}}</b>\\n\\n🚆 <b>اختر محطة الوصول في قطار العاصمة:</b>"
                         else:
                             for s in METRO_STATIONS:
                                 temp.append({{"text": s["name"], "callback_data": f"tf_dest:{{direction}}:{{orig_id}}:{{s['id']}}"}})
@@ -1062,7 +1083,7 @@ def main():
                                     temp = []
                             if temp:
                                 rows.append(temp)
-                            title = f"🚆 محطة انطلاقك: <b>{{orig_name}}</b>\\n\\n🚇 <b>اختر محطة الوصول في مترو الخط 3:</b>"
+                            title = f"🚆 محطة انطلاقك: <b>{{orig_name}}</b>\\n\\n🚇 <b>اختر محطة الوصول في مترو الخط الثالث الأخضر:</b>"
 
                         rows.append([{{"text": "🔙 تغيير محطة الانطلاق", "callback_data": f"tf_dir:{{direction}}"}}])
                         send_or_edit_message(chat_id, title, {{"inline_keyboard": rows}}, msg_id)
@@ -1086,7 +1107,7 @@ def main():
                         # Query departures for the FIRST LEG to let user pick which train they take
                         dir_code = "1"  # toward Adly Mansour in both cases
                         schedules = fetch_live_schedule_from_mobility_cairo(orig_id, dir_code, network=orig_net)
-                        now_dt = datetime.now()
+                        now_dt = get_cairo_now()
                         now_mins = now_dt.hour * 60 + now_dt.minute
 
                         deps = []
@@ -1110,7 +1131,7 @@ def main():
                             diff = tm - now_mins
                             diff_str = "الآن" if diff <= 0 else f"خلال {{diff}} د"
                             time_12h = format_time_12h(hhmm)
-                            btn_text = f"🚆 رحلة {{idx}}: {{time_12h}} ({{diff_str}})"
+                            btn_text = f"{{idx}} 🚆 رحلة: {{time_12h}} ({{diff_str}})"
                             kb_rows.append([{{
                                 "text": btn_text,
                                 "callback_data": f"tf_calc:{{direction}}:{{orig_id}}:{{dest_id}}:{{tm}}"
@@ -1143,6 +1164,17 @@ def main():
 
                         info = calculate_smart_transfer_info(direction, orig_id, dest_id, timing_mode="later" if custom_tm else "now", custom_time=custom_tm)
 
+                        now_dt = get_cairo_now()
+                        now_mins = now_dt.hour * 60 + now_dt.minute
+                        diff_start = info.get("leg1_dep_mins", now_mins) - now_mins
+                        diff_final = info.get("final_arr_mins", now_mins) - now_mins
+                        if diff_start > 0:
+                            cd_str = f"⏳ <b>متبقي على تحرك قطار البداية:</b> <b>{{diff_start}} دقيقة</b>\\n🏁 <b>متبقي على وصولك لمحطتك:</b> <b>{{diff_final}} دقيقة</b>\\n────────────────────\\n"
+                        elif diff_start == 0:
+                            cd_str = f"⏳ <b>قطار البداية يتحرك الآن من الرصيف!</b>\\n🏁 <b>متبقي على وصولك لمحطتك:</b> <b>{{diff_final}} دقيقة</b>\\n────────────────────\\n"
+                        else:
+                            cd_str = f"⚠️ <b>تحرك قطار البداية منذ {{abs(diff_start)}} دقيقة</b> | 🏁 <b>متبقي للوصول:</b> <b>{{diff_final}} دقيقة</b>\\n────────────────────\\n"
+
                         status_ico = "✅" if info["best_diff"] >= 4 else ("⚠️" if info["best_diff"] >= 0 else "❌")
                         status_title = "ستلحق القطار بكل راحة" if info["best_diff"] >= 4 else ("الوقت ضيق - تبديل سريع" if info["best_diff"] >= 0 else "سيفوتك القطار الأول")
 
@@ -1151,7 +1183,8 @@ def main():
                                 f"⚡ <b>نتيجة فحص الربط الذكي (مترو ⬅️ قطار العاصمة):</b>\\n\\n"
                                 f"<b>{{status_ico}} {{status_title}}!</b>\\n"
                                 f"────────────────────\\n"
-                                f"🚇 <b>الانطلاق بمترو الخط 3:</b> من <b>{{info['start_name']}}</b> ({{info['leg1_dep']}})\\n"
+                                f"{{cd_str}}"
+                                f"🚇 <b>الانطلاق بمترو الخط الثالث الأخضر:</b> من <b>{{info['start_name']}}</b> ({{info['leg1_dep']}})\\n"
                                 f"⏱️ <b>زمن رحلة المترو:</b> {{info['leg1_ride']}} دقيقة\\n"
                                 f"🚉 <b>الوصول لرصيف عدلي منصور:</b> <b>{{info['adly_arr']}}</b>\\n"
                                 f"🚶 <b>الصعود لرصيف قطار العاصمة:</b> <b>{{info['ready_time']}}</b> (5 دقائق تبديل)\\n\\n"
@@ -1165,11 +1198,12 @@ def main():
                                 f"⚡ <b>نتيجة فحص الربط الذكي (قطار العاصمة ⬅️ مترو):</b>\\n\\n"
                                 f"<b>{{status_ico}} {{status_title}}!</b>\\n"
                                 f"────────────────────\\n"
+                                f"{{cd_str}}"
                                 f"🚆 <b>الانطلاق بقطار العاصمة:</b> من <b>{{info['start_name']}}</b> ({{info['leg1_dep']}})\\n"
                                 f"⏱️ <b>زمن رحلة القطار:</b> {{info['leg1_ride']}} دقيقة\\n"
                                 f"🚉 <b>الوصول لرصيف عدلي منصور:</b> <b>{{info['adly_arr']}}</b>\\n"
                                 f"🚶 <b>النزول لرصيف المترو:</b> <b>{{info['ready_time']}}</b> (5 دقائق تبديل)\\n\\n"
-                                f"🚇 <b>مترو الخط الثالث الأنسب لك:</b> يتحرك الساعة <b>{{info['best_time']}}</b>\\n"
+                                f"🚇 <b>مترو الخط الثالث الأخضر الأنسب لك:</b> يتحرك الساعة <b>{{info['best_time']}}</b>\\n"
                                 f"🎯 <b>الوصول لمحطتك ({{info['dest_name']}}):</b> <b>{{info['final_arr']}}</b>\\n"
                                 f"⏱️ <b>إجمالي زمن الرحلة:</b> {{info['total_time']}} دقيقة\\n\\n"
                                 f"💡 <i>المترو البديل التالي يتحرك الساعة {{info['next_time']}}.</i>"
@@ -1263,7 +1297,7 @@ def main():
                         st_count = get_network_station_count(orig_id, dest_id, network=network)
                         price = get_ticket_price(st_count, network=network)
 
-                        now_dt = datetime.now()
+                        now_dt = get_cairo_now()
                         now_mins = now_dt.hour * 60 + now_dt.minute
 
                         lines = []
@@ -1373,7 +1407,7 @@ def main():
 
                         dir_code, dir_lbl = get_refined_direction_info(orig_obj, dest_obj, network=network)
                         schedules = fetch_live_schedule_from_mobility_cairo(orig_id, dir_code, network=network)
-                        now_dt = datetime.now()
+                        now_dt = get_cairo_now()
                         now_mins = now_dt.hour * 60 + now_dt.minute
 
                         deps = []
@@ -1394,11 +1428,12 @@ def main():
                                 deps.append((f"{{hh:02d}}:{{mm:02d}}", dm))
 
                         kb_rows = []
+                        net_ico = "🚇" if network == 'metro' else "🚆"
                         for idx, (hhmm, tm) in enumerate(deps[:5], 1):
                             diff = tm - now_mins
                             diff_str = "الآن" if diff <= 0 else f"خلال {{diff}} د"
                             time_12h = format_time_12h(hhmm)
-                            btn_text = f"🚆 قطار {{idx}}: {{time_12h}} ({{diff_str}})"
+                            btn_text = f"{{idx}} {{net_ico}} قطار: {{time_12h}} ({{diff_str}})"
                             kb_rows.append([{{
                                 "text": btn_text,
                                 "callback_data": f"trip_sel:{{network}}:{{orig_id}}:{{dest_id}}:{{tm}}"
@@ -1463,7 +1498,7 @@ def main():
                         orig_name = orig_obj['name'] if orig_obj else orig_id
                         dest_name = dest_obj['name'] if dest_obj else dest_id
 
-                        now_dt = datetime.now()
+                        now_dt = get_cairo_now()
                         now_mins = now_dt.hour * 60 + now_dt.minute
                         diff_dep = dep_tm - now_mins
                         diff_arr = arr_tm - now_mins
@@ -1630,7 +1665,7 @@ def main():
                             "times": state["times"],
                             "days": sel_days,
                             "enabled": True,
-                            "created_at": datetime.now().isoformat()
+                            "created_at": get_cairo_now().isoformat()
                         }}
                         all_r = load_reminders()
                         all_r.append(new_rem)
@@ -1680,7 +1715,7 @@ def main():
                                         res = format_station_result(target_orig["id"], target_dir, deduced_dest=target_dest, custom_dir_label=target_lbl, network=target_net)
                                         back_kb = {{
                                             "inline_keyboard": [
-                                                [{{"text": "⏰ تعيين كمنبه مجدول لهذه الرحلة", "callback_data": f"rem_set:{{target_net}}:{{target_orig['id']}}:{{target_dest['id'] if target_dest else target_orig['id']}}"}}],
+                                                [{{"text": "⏰ تعيين كمنبه", "callback_data": f"rem_set:{{target_net}}:{{target_orig['id']}}:{{target_dest['id'] if target_dest else target_orig['id']}}"}}],
                                                 [{{"text": "🔄 رحلة جديدة", "callback_data": f"choose_net:{{target_net}}"}},
                                                  {{"text": "🔙 القائمة الرئيسية", "callback_data": "main_menu"}}]
                                             ]
@@ -1736,7 +1771,7 @@ def main():
                         res = format_station_result(target_orig["id"], target_dir, deduced_dest=target_dest, custom_dir_label=target_lbl, network=target_net)
                         back_kb = {{
                             "inline_keyboard": [
-                                [{{"text": "⏰ تعيين كمنبه مجدول لهذه الرحلة", "callback_data": f"rem_set:{{target_net}}:{{target_orig['id']}}:{{target_dest['id'] if target_dest else target_orig['id']}}"}}],
+                                [{{"text": "⏰ تعيين كمنبه", "callback_data": f"rem_set:{{target_net}}:{{target_orig['id']}}:{{target_dest['id'] if target_dest else target_orig['id']}}"}}],
                                 [{{"text": "🔄 رحلة جديدة", "callback_data": f"choose_net:{{target_net}}"}},
                                  {{"text": "🔙 القائمة الرئيسية", "callback_data": "main_menu"}}]
                             ]
@@ -1749,11 +1784,58 @@ def main():
                             chat_id,
                             "👋 <b>مرحباً بك في البوت الموحد لشبكة النقل الذكية!</b>\\\n\\\n"
                             "اختر وسيلة النقل لمعرفة المواعيد والرحلات الحية:\\\n"
-                            "• <b>🚆 قطار العاصمة الكهربائي (LRT)</b>\\\n"
-                            "• <b>🚇 مترو الخط الثالث الأخضر (GL3)</b>\\\n\\\n"
+                            "• <b>🚆 قطار العاصمة الكهربائي</b>\\\n"
+                            "• <b>🚇 مترو الخط الثالث الأخضر</b>\\\n\\\n"
                             "🎙️ <b>يدعم الذكاء الصوتي:</b> أرسل رسالة صوتية (فويس) مباشرة مثل: <i>«من الشروق لعدلي منصور»</i> أو <i>«من العتبة لجامعة القاهرة»</i>.",
                             get_main_menu_keyboard()
                         )
+                        # Register persistent bottom reply keyboard (shows keyboard icon next to voice icon on Web & Mobile)
+                        send_or_edit_message(
+                            chat_id,
+                            "✨ تم تفعيل لوحة الوصول السريع أسفل الشاشة 📲",
+                            get_bottom_reply_keyboard()
+                        )
+                    elif text in ["🚆 القطارات القادمة الآن", "القطارات القادمة الآن"]:
+                        send_or_edit_message(chat_id, "🚆 <b>القطارات القادمة:</b>\\\nاختر وسيلة النقل لعرض الرحلات الحية القادمة:", get_main_menu_keyboard())
+                    elif text in ["📍 المحطات والمسار", "المحطات والمسار"]:
+                        st_kb = {{
+                            "inline_keyboard": [
+                                [{{"text": "🚆 محطات قطار العاصمة", "callback_data": "choose_net:lrt"}}],
+                                [{{"text": "🚇 محطات مترو الخط الثالث الأخضر", "callback_data": "choose_net:metro"}}],
+                                [{{"text": "🏠 القائمة الرئيسية", "callback_data": "main_menu"}}]
+                            ]
+                        }}
+                        send_or_edit_message(chat_id, "📍 <b>اختر وسيلة النقل لعرض المحطات والمسار التفصيلي:</b>", st_kb)
+                    elif text in ["🎟 أسعار التذاكر", "أسعار التذاكر"]:
+                        fares_msg = (
+                            "🎟️ <b>أسعار التذاكر والاشتراكات الرسمية (2026):</b>\\\n\\\n"
+                            "🚆 <b>قطار العاصمة الكهربائي:</b>\\\n"
+                            "• حتى 3 محطات: <b>10 جنيه</b>\\\n"
+                            "• من 4 إلى 7 محطات: <b>15 جنيه</b>\\\n"
+                            "• أكثر من 7 محطات: <b>20 جنيه</b>\\\n\\\n"
+                            "🚇 <b>مترو الخط الثالث الأخضر:</b>\\\n"
+                            "• منطقة واحدة (حتى 9 محطات): <b>8 جنيه</b>\\\n"
+                            "• منطقتان (10 إلى 16 محطة): <b>10 جنيه</b>\\\n"
+                            "• 3 مناطق (17 إلى 23 محطة): <b>15 جنيه</b>\\\n"
+                            "• أكثر من 23 محطة: <b>20 جنيه</b>\\\n\\\n"
+                            "────────────────────\\\n"
+                            "💡 <i>لحساب أي مسار تفصيلي وسعر التذكرة اضغط على موقع المواعيد.</i>"
+                        )
+                        fares_kb = {{"inline_keyboard": [
+                            [{{"text": "🌐 حاسبة الأسعار والمسارات بالموقع", "url": WEB_URL}}],
+                            [{{"text": "🔙 القائمة الرئيسية", "callback_data": "main_menu"}}]
+                        ]}}
+                        send_or_edit_message(chat_id, fares_msg, fares_kb)
+                    elif text in ["📞 أرقام خدمة العملاء", "أرقام خدمة العملاء"]:
+                        sup_msg = (
+                            "📞 <b>أرقام خدمة العملاء والتواصل:</b>\\\n\\\n"
+                            "• <b>الخط الساخن RATP Dev:</b> 19549\\\n"
+                            "• <b>واتساب قطار العاصمة والمترو:</b> 01103776770\\\n"
+                            "• <b>البريد والموقع:</b> mobilitycairo.com\\\n\\\n"
+                            "🕒 أوقات عمل مراكز الدعم والمحطات: 05:30 ص حتى 11:30 م يومياً."
+                        )
+                        sup_kb = {{"inline_keyboard": [[{{"text": "🔙 القائمة الرئيسية", "callback_data": "main_menu"}}]]}}
+                        send_or_edit_message(chat_id, sup_msg, sup_kb)
                     else:
                         send_or_edit_message(
                             chat_id,

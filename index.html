@@ -1294,9 +1294,19 @@
       alert("✅ تم تثبيت الإعدادات كافتراضية بنجاح!");
     }
 
-    // Time handling
+    // Time handling (Cairo Africa/Cairo strictly enforced)
+    function getCairoDate() {
+      try {
+        const d = new Date();
+        const s = d.toLocaleString("en-US", { timeZone: "Africa/Cairo" });
+        return new Date(s);
+      } catch(e) {
+        return new Date();
+      }
+    }
+
     function updateClock() {
-      const now = new Date();
+      const now = getCairoDate();
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
       const s = String(now.getSeconds()).padStart(2, '0');
@@ -1306,7 +1316,7 @@
     updateClock();
 
     function setCurrentTime() {
-      const now = new Date();
+      const now = getCairoDate();
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
       inputTime.value = `${h}:${m}`;
@@ -1488,18 +1498,6 @@
     // -------------------------------------------------------------
     
     let tripCountdownTimer = null;
-    function formatCountdownDiff(diffSecs) {
-      const absSecs = Math.abs(diffSecs);
-      const h = Math.floor(absSecs / 3600);
-      const m = Math.floor((absSecs % 3600) / 60);
-      const s = absSecs % 60;
-      const sPad = s < 10 ? '0' + s : s;
-      if (h > 0) {
-        return `${h} س و ${m} د و ${sPad} ث`;
-      }
-      return `${m} د و ${sPad} ث`;
-    }
-
     function startLiveTripCountdown(depMinutes, tripMinutes) {
       if (tripCountdownTimer) clearInterval(tripCountdownTimer);
       function tick() {
@@ -1516,21 +1514,23 @@
 
         if (depEl) {
           if (depDiff > 0) {
-            depEl.textContent = formatCountdownDiff(depDiff);
+            const m = Math.floor(depDiff / 60);
+            const s = depDiff % 60;
+            depEl.textContent = `${m} د و ${s < 10 ? '0' : ''}${s} ث`;
           } else if (depDiff >= -60) {
             depEl.innerHTML = `<span class="text-emerald-400">🚀 يتحرك الآن من الرصيف</span>`;
-          } else if (arrDiff > 0) {
-            depEl.innerHTML = `<span class="text-amber-400">🚆 القطار في الطريق (تحرك منذ ${formatCountdownDiff(Math.abs(depDiff))})</span>`;
           } else {
-            depEl.innerHTML = `<span class="text-rose-400">⚠️ انتهت الرحلة</span>`;
+            depEl.innerHTML = `<span class="text-rose-400">⚠️ تحرك منذ ${Math.abs(Math.floor(depDiff / 60))} د</span>`;
           }
         }
 
         if (arrEl) {
           if (arrDiff > 0) {
-            arrEl.textContent = formatCountdownDiff(arrDiff);
+            const m = Math.floor(arrDiff / 60);
+            const s = arrDiff % 60;
+            arrEl.textContent = `${m} د و ${s < 10 ? '0' : ''}${s} ث`;
           } else {
-            arrEl.innerHTML = `<span class="text-emerald-400">🏁 وصلت لمحطتك النهائية</span>`;
+            arrEl.innerHTML = `<span class="text-emerald-400">🏁 وصلت لمحطتك</span>`;
           }
         }
       }
@@ -1808,10 +1808,9 @@
         </div>
       `;
       lucide.createIcons();
-      startLiveTripCountdown(chosenDep.mins, exactMinutes);
     }
 
-    async function calculateLrtTrip(startId, endId, selectedDepMins = null) {
+    function calculateLrtTrip(startId, endId) {
       const stStart = LRT_STATIONS.find(s => s.id === startId);
       const stEnd = LRT_STATIONS.find(s => s.id === endId);
 
@@ -1883,107 +1882,7 @@
       const exactMinutes = getActualTravelMinutes(startId, endId, 'lrt');
       const pathStations = path.map(id => LRT_STATIONS.find(s => s.id === id)).filter(Boolean);
 
-      const dirCode = (LRT_FROM_ADLY_MINS[startId] ?? 0) <= (LRT_FROM_ADLY_MINS[endId] ?? 0) ? "0" : "1";
-      const dirKey = `LRT-14_${dirCode}`;
-
-      let departures = [];
-      const now = new Date();
-      const nowH = now.getHours();
-      const nowM = now.getMinutes();
-      const nowTotalMins = nowH * 60 + nowM;
-
-      try {
-        const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-        const timeStr = `${String(nowH).padStart(2,'0')}:${String(nowM).padStart(2,'0')}:00`;
-        const resp = await fetch(`/api/mobility?nbtimes=5&stop=${startId}&reseau=&date=${dateStr}&heure=${timeStr}`);
-        const data = await resp.json();
-        const sched = (data && data.items && data.items[dirKey]) ? data.items[dirKey].Schedule || [] : [];
-        for (const s of sched) {
-          const depRaw = s.DepTime || "";
-          const hhmm = depRaw.includes(" ") ? depRaw.split(" ")[1] : depRaw;
-          if (hhmm.includes(":")) {
-            const [dh, dm] = hhmm.split(':').map(Number);
-            departures.push({
-              time: hhmm,
-              mins: dh * 60 + dm,
-              head: s.tripHeadsign || s.to_stop_name || ""
-            });
-          }
-        }
-      } catch (err) {
-        console.warn("Could not fetch live LRT departures:", err);
-      }
-
-      if (departures.length === 0) {
-        for (let i = 0; i < 5; i++) {
-          const dm = nowTotalMins + 5 + i * 15;
-          const hh = Math.floor(dm / 60) % 24;
-          const mm = dm % 60;
-          departures.push({
-            time: `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`,
-            mins: dm,
-            head: dirCode === "0" ? "مدينة الفنون والثقافة / العاشر" : "عدلي منصور المركزية"
-          });
-        }
-      }
-
-      let chosenDep = departures[0];
-      if (selectedDepMins !== null) {
-        const found = departures.find(d => d.mins === selectedDepMins);
-        if (found) chosenDep = found;
-        else chosenDep = { mins: selectedDepMins, time: `${String(Math.floor(selectedDepMins/60)%24).padStart(2,'0')}:${String(selectedDepMins%60).padStart(2,'0')}` };
-      }
-
-      const arrMins = chosenDep.mins + exactMinutes;
-
       tripCalcResult.innerHTML = `
-        <!-- Live Countdown Widget -->
-        <div class="mb-4 bg-gradient-to-r from-amber-950/60 via-slate-900 to-emerald-950/60 border border-amber-500/40 rounded-2xl p-3.5 shadow-xl text-center">
-          <div class="flex items-center justify-center gap-2 mb-1">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-xs font-bold text-amber-300">العداد التنازلي الحي للرحلة (محدث ثانية بثانية):</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
-            <div class="bg-black/50 border border-white/10 rounded-xl p-2.5">
-              <span class="block text-xs text-slate-300 mb-0.5">⏳ متبقي على تحرك القطار:</span>
-              <span id="live-trip-dep-timer" class="text-2xl font-black font-mono text-amber-400">--:--</span>
-            </div>
-            <div class="bg-black/50 border border-white/10 rounded-xl p-2.5">
-              <span class="block text-xs text-slate-300 mb-0.5">🏁 متبقي على وصولك لمحطتك:</span>
-              <span id="live-trip-arr-timer" class="text-2xl font-black font-mono text-emerald-400">--:--</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Next 5 Trains Selector Bar -->
-        <div class="mb-4 bg-slate-900/90 border border-amber-500/30 rounded-2xl p-3.5 shadow-lg">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-              <i data-lucide="clock" class="w-4 h-4"></i>
-              <span>اختر رحلتك من الـ 5 قطارات القادمة من محطة (${stStart.name}):</span>
-            </span>
-            <span class="text-[10px] bg-amber-950 text-amber-300 border border-amber-800/60 px-2 py-0.5 rounded-full font-mono">حي 🚆 RATP Dev</span>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            ${departures.slice(0, 5).map((dep, idx) => {
-              const isSelected = dep.mins === chosenDep.mins;
-              const diffMins = dep.mins - nowTotalMins;
-              const diffText = diffMins <= 0 ? 'الآن' : `بعد ${diffMins} د`;
-              const activeClass = isSelected
-                ? 'bg-amber-600 text-white font-bold ring-2 ring-amber-300 shadow-md transform scale-[1.02]'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700';
-
-              return `
-                <button type="button" onclick="calculateLrtTrip('${startId}', '${endId}', ${dep.mins})"
-                        class="p-2 rounded-xl text-center transition-all cursor-pointer ${activeClass}">
-                  <span class="block text-xs font-mono font-bold">${formatTimeFromMinutes(dep.mins)}</span>
-                  <span class="block text-[10px] opacity-80 mt-0.5">قطار ${idx + 1} (${diffText})</span>
-                </button>
-              `;
-            }).join('')}
-          </div>
-        </div>
-
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <div class="bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl p-3 text-center">
             <span class="text-xs text-amber-800 dark:text-amber-300 font-bold block mb-1">🎫 سعر التذكرة الرسمية</span>
@@ -2035,7 +1934,6 @@
         </div>
       `;
       lucide.createIcons();
-      startLiveTripCountdown(chosenDep.mins, exactMinutes);
     }
 
     // -------------------------------------------------------------
@@ -2270,9 +2168,7 @@
           finalArrivalStr, leg2RideMins: lrtRideMins,
           stopsCount1: metroStopsCount, stopsType1: "محطات مترو الخط الثالث الأخضر", stopsNote1: "بين كل محطة ومحطة: 1.5 إلى 2 دقيقة", icon1: "subway",
           stopsCount2: lrtStopsCount, stopsType2: "محطات قطار العاصمة الكهربائي", stopsNote2: "بين كل محطة ومحطة: 4 إلى 5 دقائق", icon2: "train",
-          totalTripFormatted,
-          startDepMins: leg1DepMins,
-          tripDurationMins: (finalArrivalMins - leg1DepMins)
+          totalTripFormatted
         });
 
       } else {
@@ -2410,9 +2306,7 @@
           finalArrivalStr, leg2RideMins: metroRideMins,
           stopsCount1: lrtStopsCount, stopsType1: "محطات قطار العاصمة الكهربائي", stopsNote1: "بين كل محطة ومحطة: 4 إلى 5 دقائق", icon1: "train",
           stopsCount2: metroStopsCount, stopsType2: "محطات مترو الخط الثالث الأخضر", stopsNote2: "بين كل محطة ومحطة: 1.5 إلى 2 دقيقة", icon2: "subway",
-          totalTripFormatted,
-          startDepMins: leg1DepMins,
-          tripDurationMins: (finalArrivalMins - leg1DepMins)
+          totalTripFormatted
         });
       }
     }
@@ -2447,8 +2341,8 @@
             </div>
           </div>
 
-          <!-- Timeline 4 Uniform Blocks -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 my-3">
+          <!-- Timeline 4 Uniform Blocks (2x2 Horizontal RTL) -->
+          <div class="grid grid-cols-2 gap-3 my-3">
             <!-- Block 1 -->
             <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
               <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
@@ -2501,8 +2395,8 @@
             </div>
           </div>
 
-          <!-- Detail Stats Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 my-3.5">
+          <!-- Detail Stats Grid (3 Horizontal RTL Columns) -->
+          <div class="grid grid-cols-3 gap-3 my-3.5">
             <div class="bg-indigo-950/50 border border-indigo-700/50 rounded-2xl p-3.5 flex items-center gap-3">
               <span class="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
                 <i data-lucide="${p.icon1}" class="w-5 h-5"></i>
@@ -2581,9 +2475,6 @@
         </div>
       `;
       lucide.createIcons();
-      if (p.startDepMins !== undefined && p.tripDurationMins !== undefined) {
-        startLiveTripCountdown(p.startDepMins, p.tripDurationMins);
-      }
     }
 
     // Share Handler Functions
@@ -2627,23 +2518,36 @@
       }
     };
 
-    // Download Card as PNG Image
+    // Download Card as PNG Image (Always crisp horizontal 800px)
     window.downloadTripCardImage = function() {
       const cardEl = document.getElementById('transfer-card-snapshot');
       if (!cardEl || typeof html2canvas === 'undefined') {
         alert("يرجى الانتظار حتى اكتمال تحميل أداة التقاط الصور");
         return;
       }
-      html2canvas(cardEl, {
+      const clone = cardEl.cloneNode(true);
+      clone.style.width = '800px';
+      clone.style.minWidth = '800px';
+      clone.style.maxWidth = '800px';
+      clone.style.position = 'fixed';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.zIndex = '-9999';
+      document.body.appendChild(clone);
+
+      html2canvas(clone, {
         backgroundColor: '#090d16',
         scale: 2,
-        useCORS: true
+        useCORS: true,
+        width: 800
       }).then(canvas => {
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
         const link = document.createElement('a');
         link.download = `مسار-الرحلة-${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       }).catch(err => {
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
         console.error("Error creating card image:", err);
         alert("حدث خطأ أثناء تحميل الصورة، يرجى المحاولة مرة أخرى.");
       });

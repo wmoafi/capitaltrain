@@ -11,6 +11,11 @@ import sys
 import threading
 import time
 
+# Ensure Cairo Timezone
+os.environ['TZ'] = 'Africa/Cairo'
+if hasattr(time, 'tzset'):
+    time.tzset()
+
 # Ensure UTF-8 output
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')

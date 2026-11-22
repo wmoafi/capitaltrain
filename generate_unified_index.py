@@ -1080,9 +1080,19 @@ html_content = f'''<!DOCTYPE html>
       alert("✅ تم تثبيت الإعدادات كافتراضية بنجاح!");
     }}
 
-    // Time handling
+    // Time handling (Cairo Africa/Cairo strictly enforced)
+    function getCairoDate() {{
+      try {{
+        const d = new Date();
+        const s = d.toLocaleString("en-US", {{ timeZone: "Africa/Cairo" }});
+        return new Date(s);
+      }} catch(e) {{
+        return new Date();
+      }}
+    }}
+
     function updateClock() {{
-      const now = new Date();
+      const now = getCairoDate();
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
       const s = String(now.getSeconds()).padStart(2, '0');
@@ -1092,7 +1102,7 @@ html_content = f'''<!DOCTYPE html>
     updateClock();
 
     function setCurrentTime() {{
-      const now = new Date();
+      const now = getCairoDate();
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
       inputTime.value = `${{h}}:${{m}}`;
@@ -2117,8 +2127,8 @@ html_content = f'''<!DOCTYPE html>
             </div>
           </div>
 
-          <!-- Timeline 4 Uniform Blocks -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 my-3">
+          <!-- Timeline 4 Uniform Blocks (2x2 Horizontal RTL) -->
+          <div class="grid grid-cols-2 gap-3 my-3">
             <!-- Block 1 -->
             <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
               <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
@@ -2171,8 +2181,8 @@ html_content = f'''<!DOCTYPE html>
             </div>
           </div>
 
-          <!-- Detail Stats Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 my-3.5">
+          <!-- Detail Stats Grid (3 Horizontal RTL Columns) -->
+          <div class="grid grid-cols-3 gap-3 my-3.5">
             <div class="bg-indigo-950/50 border border-indigo-700/50 rounded-2xl p-3.5 flex items-center gap-3">
               <span class="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
                 <i data-lucide="${{p.icon1}}" class="w-5 h-5"></i>
@@ -2282,23 +2292,36 @@ html_content = f'''<!DOCTYPE html>
       }}
     }};
 
-    // Download Card as PNG Image
+    // Download Card as PNG Image (Always crisp horizontal 800px)
     window.downloadTripCardImage = function() {{
       const cardEl = document.getElementById('transfer-card-snapshot');
       if (!cardEl || typeof html2canvas === 'undefined') {{
         alert("يرجى الانتظار حتى اكتمال تحميل أداة التقاط الصور");
         return;
       }}
-      html2canvas(cardEl, {{
+      const clone = cardEl.cloneNode(true);
+      clone.style.width = '800px';
+      clone.style.minWidth = '800px';
+      clone.style.maxWidth = '800px';
+      clone.style.position = 'fixed';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.zIndex = '-9999';
+      document.body.appendChild(clone);
+
+      html2canvas(clone, {{
         backgroundColor: '#090d16',
         scale: 2,
-        useCORS: true
+        useCORS: true,
+        width: 800
       }}).then(canvas => {{
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
         const link = document.createElement('a');
         link.download = `مسار-الرحلة-${{Date.now()}}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       }}).catch(err => {{
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
         console.error("Error creating card image:", err);
         alert("حدث خطأ أثناء تحميل الصورة، يرجى المحاولة مرة أخرى.");
       }});
