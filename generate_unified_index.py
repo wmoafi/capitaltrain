@@ -1744,10 +1744,10 @@ html_content = f'''<!DOCTYPE html>
         path = [startId, endId];
       }}
       path = path.filter((v, i, a) => a.indexOf(v) === i);
-      return Math.max(1, path.length);
+      return Math.max(1, path.length - 1);
     }}
 
-    // Helper: Path stations count from Adly Mansour to any LRT Station
+    // Helper: Path stations count from Adly Mansour to any LRT Station (excluding departure station)
     function getLrtStationsCount(endId) {{
       const fullMainOrder = ["139886", "139912", "139896", "139920", "139910", "139892"];
       const capitalOrder = ["139916", "139898", "139888", "139885"];
@@ -1762,7 +1762,7 @@ html_content = f'''<!DOCTYPE html>
         path = [...fullMainOrder, ...tenthOrder.slice(0, tenthOrder.indexOf(endId) + 1)];
       }}
       path = path.filter((v, i, a) => a.indexOf(v) === i);
-      return Math.max(1, path.length);
+      return Math.max(1, path.length - 1);
     }}
 
     // Format human-friendly duration text (e.g., ساعة وربع، ساعة ونصف، ساعتين)
@@ -2099,137 +2099,138 @@ html_content = f'''<!DOCTYPE html>
 
     function renderBidirectionalCardUI(p) {{
       transferResultContainer.innerHTML = `
-        <div id="transfer-card-snapshot" class="rounded-3xl p-5 sm:p-6 border transition-all ${{p.statusBoxClass}} shadow-2xl bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-slate-950">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
-            <span class="text-sm sm:text-base font-black px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 shadow-xs">
-              ${{p.statusBadge}}
+        <div id="transfer-card-snapshot" dir="rtl" style="direction: rtl;" class="rounded-3xl p-5 sm:p-6 border-2 border-slate-200 shadow-xl bg-white text-slate-900 transition-all">
+          <!-- Header: Route on Right, Status Badge on Left in RTL -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200">
+            <span class="text-xs sm:text-sm font-bold text-slate-700">
+              المسار الكلي: من <strong class="text-slate-950 font-black">${{p.startTitle}}</strong> إلى <strong class="text-slate-950 font-black">${{p.destTitle}}</strong>
             </span>
-            <span class="text-xs sm:text-sm font-bold text-white/90">
-              المسار الكلي: من <strong>${{p.startTitle}}</strong> إلى <strong>${{p.destTitle}}</strong>
+            <span class="text-xs sm:text-sm font-black px-3.5 py-1.5 rounded-xl border ${{p.bestTrain && p.bestTrain.diff >= 4 ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : (p.bestTrain && p.bestTrain.diff >= 0 ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-rose-50 text-rose-800 border-rose-300')}} shadow-2xs">
+              ${{p.statusBadge}}
             </span>
           </div>
 
           <!-- Live Countdown Widget -->
-          <div class="mb-3.5 bg-black/60 border border-amber-500/40 rounded-2xl p-3 text-center">
+          <div class="mb-3.5 bg-slate-50 border border-amber-300/80 rounded-2xl p-3 text-center">
             <div class="flex items-center justify-center gap-2 mb-1">
-              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span class="text-xs font-bold text-amber-300">العداد التنازلي المباشر للرحلة (محدث ثانية بثانية):</span>
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-xs font-bold text-amber-900">العداد التنازلي المباشر للرحلة (محدث ثانية بثانية):</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
-              <div class="bg-slate-900/70 border border-white/10 rounded-xl p-2">
-                <span class="block text-xs text-slate-300 mb-0.5">⏳ متبقي على تحرك قطار البداية:</span>
-                <span id="live-trip-dep-timer" class="text-2xl font-black font-mono text-amber-400">--:--</span>
+              <div class="bg-white border border-slate-200 shadow-2xs rounded-xl p-2">
+                <span class="block text-xs text-slate-600 mb-0.5">⏳ متبقي على تحرك قطار البداية:</span>
+                <span id="live-trip-dep-timer" class="text-2xl font-black font-mono text-amber-700">--:--</span>
               </div>
-              <div class="bg-slate-900/70 border border-white/10 rounded-xl p-2">
-                <span class="block text-xs text-slate-300 mb-0.5">🏁 متبقي على وصولك لمحطتك النهائية:</span>
-                <span id="live-trip-arr-timer" class="text-2xl font-black font-mono text-emerald-400">--:--</span>
+              <div class="bg-white border border-slate-200 shadow-2xs rounded-xl p-2">
+                <span class="block text-xs text-slate-600 mb-0.5">🏁 متبقي على وصولك لمحطتك النهائية:</span>
+                <span id="live-trip-arr-timer" class="text-2xl font-black font-mono text-emerald-700">--:--</span>
               </div>
             </div>
           </div>
 
           <!-- Timeline 4 Uniform Blocks (2x2 Horizontal RTL) -->
-          <div class="grid grid-cols-2 gap-3 my-3">
-            <!-- Block 1 -->
-            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
-              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+          <div dir="rtl" style="direction: rtl;" class="grid grid-cols-2 gap-3 my-3">
+            <!-- Block 1 (Top Right in RTL) -->
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col justify-between shadow-2xs">
+              <span class="text-xs text-slate-600 font-bold mb-1 flex items-center gap-1">
                 <span>1.</span>
                 <span>${{p.startDesc}}</span>
               </span>
               <div class="my-2">
-                <div class="font-mono font-black text-2xl sm:text-3xl text-white tracking-wide">${{p.startTime12}}</div>
+                <div class="font-mono font-black text-2xl sm:text-3xl text-sky-700 tracking-wide">${{p.startTime12}}</div>
               </div>
-              <div class="text-xs font-bold text-slate-300 border-t border-white/10 pt-2 flex flex-col">
+              <div class="text-xs font-bold text-slate-700 border-t border-slate-200 pt-2 flex flex-col">
                 <span>${{p.startTitle}}</span>
-                ${{p.platformNote ? `<span class="text-[10px] text-amber-300 font-normal mt-0.5">${{p.platformNote}}</span>` : ''}}
+                ${{p.platformNote ? `<span class="text-[10px] text-amber-700 font-normal mt-0.5">${{p.platformNote}}</span>` : ''}}
               </div>
             </div>
 
-            <!-- Block 2 -->
-            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
-              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+            <!-- Block 2 (Top Left in RTL) -->
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col justify-between shadow-2xs">
+              <span class="text-xs text-slate-600 font-bold mb-1 flex items-center gap-1">
                 <span>2.</span>
                 <span>الوصول لعدلي منصور</span>
               </span>
               <div class="my-2">
-                <div class="font-mono font-black text-2xl sm:text-3xl text-sky-300 tracking-wide">${{p.adlyArrivalStr}}</div>
+                <div class="font-mono font-black text-2xl sm:text-3xl text-sky-800 tracking-wide">${{p.adlyArrivalStr}}</div>
               </div>
-              <div class="text-xs font-bold text-slate-300 border-t border-white/10 pt-2">زمن ${{p.leg1Type}}: ${{p.leg1RideMins}} دقيقة</div>
+              <div class="text-xs font-bold text-slate-700 border-t border-slate-200 pt-2">زمن ${{p.leg1Type}}: ${{p.leg1RideMins}} دقيقة</div>
             </div>
 
-            <!-- Block 3 -->
-            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
-              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+            <!-- Block 3 (Bottom Right in RTL) -->
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col justify-between shadow-2xs">
+              <span class="text-xs text-slate-600 font-bold mb-1 flex items-center gap-1">
                 <span>3.</span>
                 <span>حركة ${{p.leg2Type}}</span>
               </span>
               <div class="my-2">
-                <div class="font-mono font-black text-2xl sm:text-3xl text-amber-300 tracking-wide">${{p.leg2Dep12}}</div>
+                <div class="font-mono font-black text-2xl sm:text-3xl text-amber-700 tracking-wide">${{p.leg2Dep12}}</div>
               </div>
-              <div class="text-xs font-bold text-amber-200 border-t border-white/10 pt-2">جاهز بالرصيف: ${{p.readyPlatformStr}}</div>
+              <div class="text-xs font-bold text-amber-800 border-t border-slate-200 pt-2">جاهز بالرصيف: ${{p.readyPlatformStr}}</div>
             </div>
 
-            <!-- Block 4 -->
-            <div class="bg-black/50 rounded-2xl p-4 border border-white/15 flex flex-col justify-between shadow-xs">
-              <span class="text-xs text-slate-300 font-bold mb-1 flex items-center gap-1">
+            <!-- Block 4 (Bottom Left in RTL) -->
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col justify-between shadow-2xs">
+              <span class="text-xs text-slate-600 font-bold mb-1 flex items-center gap-1">
                 <span>4.</span>
                 <span>الوصول لوجهتك النهائية</span>
               </span>
               <div class="my-2">
-                <div class="font-mono font-black text-2xl sm:text-3xl text-emerald-300 tracking-wide">${{p.finalArrivalStr}}</div>
+                <div class="font-mono font-black text-2xl sm:text-3xl text-emerald-700 tracking-wide">${{p.finalArrivalStr}}</div>
               </div>
-              <div class="text-xs font-bold text-slate-300 border-t border-white/10 pt-2">${{p.destTitle}} (رحلة ${{p.leg2Type}}: ${{p.leg2RideMins}} د)</div>
+              <div class="text-xs font-bold text-slate-700 border-t border-slate-200 pt-2">${{p.destTitle}} (زمن ${{p.leg2Type}}: ${{p.leg2RideMins}} د)</div>
             </div>
           </div>
 
-          <!-- Detail Stats Grid (3 Horizontal RTL Columns) -->
-          <div class="grid grid-cols-3 gap-3 my-3.5">
-            <div class="bg-indigo-950/50 border border-indigo-700/50 rounded-2xl p-3.5 flex items-center gap-3">
-              <span class="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+          <!-- Bottom 3 Uniform Badges (Right: Leg 1, Middle: Leg 2, Left: Total) -->
+          <div dir="rtl" style="direction: rtl;" class="grid grid-cols-1 md:grid-cols-3 gap-3 my-3">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center gap-3">
+              <span class="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300">
                 <i data-lucide="${{p.icon1}}" class="w-5 h-5"></i>
               </span>
               <div>
-                <div class="text-xs text-indigo-200 font-bold">${{p.stopsType1}}</div>
-                <div class="text-xl font-black text-white font-mono mt-0.5">${{p.stopsCount1}} <span class="text-xs font-normal">محطة</span></div>
-                <div class="text-[10px] text-indigo-300/80 mt-0.5">${{p.stopsNote1}}</div>
+                <div class="text-xs text-emerald-800 font-bold">${{p.stopsType1}}</div>
+                <div class="text-xl font-black text-emerald-950 font-mono mt-0.5">${{p.stopsCount1}} <span class="text-xs font-normal">محطة</span></div>
+                <div class="text-[10px] text-emerald-700 mt-0.5">${{p.stopsNote1}}</div>
               </div>
             </div>
 
-            <div class="bg-teal-950/50 border border-teal-700/50 rounded-2xl p-3.5 flex items-center gap-3">
-              <span class="p-2.5 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30">
+            <div class="bg-sky-50 border border-sky-200 rounded-2xl p-3.5 flex items-center gap-3">
+              <span class="p-2.5 rounded-xl bg-sky-100 text-sky-800 border border-sky-300">
                 <i data-lucide="${{p.icon2}}" class="w-5 h-5"></i>
               </span>
               <div>
-                <div class="text-xs text-teal-200 font-bold">${{p.stopsType2}}</div>
-                <div class="text-xl font-black text-white font-mono mt-0.5">${{p.stopsCount2}} <span class="text-xs font-normal">محطة</span></div>
-                <div class="text-[10px] text-teal-300/80 mt-0.5">${{p.stopsNote2}}</div>
+                <div class="text-xs text-sky-800 font-bold">${{p.stopsType2}}</div>
+                <div class="text-xl font-black text-sky-950 font-mono mt-0.5">${{p.stopsCount2}} <span class="text-xs font-normal">محطة</span></div>
+                <div class="text-[10px] text-sky-700 mt-0.5">${{p.stopsNote2}}</div>
               </div>
             </div>
 
-            <div class="bg-amber-950/50 border border-amber-700/50 rounded-2xl p-3.5 flex items-center gap-3">
-              <span class="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-center gap-3">
+              <span class="p-2.5 rounded-xl bg-amber-100 text-amber-800 border border-amber-300">
                 <i data-lucide="hourglass" class="w-5 h-5"></i>
               </span>
               <div>
-                <div class="text-xs text-amber-200 font-bold">إجمالي وقت الرحلة المشتركة</div>
-                <div class="text-base sm:text-lg font-black text-amber-300 font-mono mt-0.5">${{p.totalTripFormatted}}</div>
-                <div class="text-[10px] text-amber-200/80 mt-0.5">شاملاً الركوب والتبديل والوصول</div>
+                <div class="text-xs text-amber-800 font-bold">إجمالي وقت الرحلة المشتركة</div>
+                <div class="text-base sm:text-lg font-black text-amber-950 font-mono mt-0.5">${{p.totalTripFormatted}}</div>
+                <div class="text-[10px] text-amber-700 mt-0.5">شاملاً الركوب والتبديل والوصول</div>
               </div>
             </div>
           </div>
 
           <!-- Bottom Tip Box -->
-          <div class="mt-3 text-xs sm:text-sm leading-relaxed p-3.5 bg-black/40 rounded-xl border border-white/15 flex items-start gap-2.5">
-            <i data-lucide="info" class="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5"></i>
+          <div class="mt-3 text-xs sm:text-sm leading-relaxed p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-2.5 text-slate-800">
+            <i data-lucide="info" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
             <div>
-              <span class="font-semibold text-slate-100">${{p.adviceText}}</span>
-              ${{p.nextTrain ? `<span class="block text-xs sm:text-sm text-slate-300 font-medium mt-1.5">💡 القطار البديل التالي يتحرك من رصيف عدلي منصور الساعة <strong>${{p.nextTrain.time12}}</strong>.</span>` : ''}}
+              <span class="font-semibold text-slate-900">${{p.adviceText}}</span>
+              ${{p.nextTrain ? `<span class="block text-xs sm:text-sm text-slate-700 font-medium mt-1.5">💡 القطار البديل التالي يتحرك من رصيف عدلي منصور الساعة <strong>${{p.nextTrain.time12}}</strong>.</span>` : ''}}
             </div>
           </div>
 
           <!-- Watermark -->
-          <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
-            <span>شبكة النقل الذكية: قطار العاصمة الكهربائي ومترو الخط الثالث</span>
-            <span>capitaltrain.tafawuq-edu.site</span>
+          <div class="mt-3 pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+            <span>شبكة النقل الذكية: قطار العاصمة ومترو الخط الثالث الأخضر</span>
+            <span class="font-mono">capitaltrain.tafawuq-edu.site</span>
           </div>
         </div>
 
@@ -2307,10 +2308,13 @@ html_content = f'''<!DOCTYPE html>
       clone.style.left = '-9999px';
       clone.style.top = '0';
       clone.style.zIndex = '-9999';
+      clone.style.direction = 'rtl';
+      clone.setAttribute('dir', 'rtl');
+      clone.style.backgroundColor = '#ffffff';
       document.body.appendChild(clone);
 
       html2canvas(clone, {{
-        backgroundColor: '#090d16',
+        backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         width: 800
@@ -2323,132 +2327,9 @@ html_content = f'''<!DOCTYPE html>
       }}).catch(err => {{
         if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
         console.error("Error creating card image:", err);
-        alert("حدث خطأ أثناء تحميل الصورة، يرجى المحاولة مرة أخرى.");
+        alert("حدث خطأ أثناء تحميل الصورة");
       }});
     }};
-
-    // Preset Modal Setup
-    const modalPreset = document.getElementById('modal-preset');
-    const btnOpenModalPreset = document.getElementById('btn-open-modal-preset');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-    const btnCancelModal = document.getElementById('btn-cancel-modal');
-    const btnSavePresetConfirm = document.getElementById('btn-save-preset-confirm');
-    const presetTitleInput = document.getElementById('preset-title-input');
-    const iconPickerGrid = document.getElementById('icon-picker-grid');
-    const modalStationName = document.getElementById('modal-station-name');
-    const modalDirectionName = document.getElementById('modal-direction-name');
-    const modalTimeName = document.getElementById('modal-time-name');
-
-    const PRESET_ICONS = [
-      {{ emoji: "💼", label: "الذهاب للعمل" }},
-      {{ emoji: "🏠", label: "العودة للبيت" }},
-      {{ emoji: "🌅", label: "صباحي" }},
-      {{ emoji: "🌇", label: "مسائي" }},
-      {{ emoji: "🎓", label: "جامعة / دراسة" }},
-      {{ emoji: "🏋️", label: "تمرين / رياضة" }},
-      {{ emoji: "🛍️", label: "تسوق" }},
-      {{ emoji: "✈️", label: "مطار / سفر" }},
-      {{ emoji: "🎨", label: "ثقافة وفنون" }},
-      {{ emoji: "💡", label: "معرفة" }},
-      {{ emoji: "🚇", label: "مترو" }},
-      {{ emoji: "🚄", label: "قطار سريع" }}
-    ];
-    let selectedIcon = "💼";
-
-    function renderIconPicker() {{
-      iconPickerGrid.innerHTML = '';
-      PRESET_ICONS.forEach(item => {{
-        const btn = document.createElement('button');
-        btn.type = "button";
-        const isSel = item.emoji === selectedIcon;
-        btn.className = `p-2 text-xl rounded-xl border flex items-center justify-center transition ${{
-          isSel 
-            ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 scale-110 shadow-xs' 
-            : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-        }}`;
-        btn.innerHTML = item.emoji;
-        btn.title = item.label;
-        btn.onclick = () => {{
-          selectedIcon = item.emoji;
-          renderIconPicker();
-        }};
-        iconPickerGrid.appendChild(btn);
-      }});
-    }}
-
-    btnOpenModalPreset.addEventListener('click', () => {{
-      const stName = selectStation.options[selectStation.selectedIndex].text;
-      const destName = selectDestStation.options[selectDestStation.selectedIndex].text;
-      const {{ dir, dirLabel }} = updateDirectionUI();
-      const timeVal = inputTime.value || "08:00";
-
-      modalStationName.textContent = stName;
-      modalDirectionName.textContent = `${{destName}} (${{dirLabel}})`;
-      modalTimeName.textContent = convert24to12(timeVal);
-
-      presetTitleInput.value = `من ${{stName.split('[')[0].trim()}} إلى ${{destName.split('[')[0].trim()}}`;
-      renderIconPicker();
-      modalPreset.classList.remove('hidden');
-    }});
-
-    function closeModal() {{
-      modalPreset.classList.add('hidden');
-    }}
-    btnCloseModal.addEventListener('click', closeModal);
-    btnCancelModal.addEventListener('click', closeModal);
-
-    btnSavePresetConfirm.addEventListener('click', () => {{
-      const title = presetTitleInput.value.trim() || "رحلتي";
-      const stName = selectStation.options[selectStation.selectedIndex].text.split('[')[0].trim();
-      const destName = selectDestStation.options[selectDestStation.selectedIndex].text.split('[')[0].trim();
-      const {{ dir, dirLabel }} = updateDirectionUI();
-      const timeVal = inputTime.value || "08:00";
-      const time12 = convert24to12(timeVal);
-
-      const newPreset = {{
-        id: 'p_' + Date.now(),
-        icon: selectedIcon,
-        title: title,
-        stationId: selectStation.value,
-        destStationId: selectDestStation.value,
-        time: timeVal,
-        label: `${{stName}} ⬅️ ${{destName}} (${{time12}})`
-      }};
-
-      const presets = getSavedPresets();
-      presets.push(newPreset);
-      localStorage.setItem(getPresetsStorageKey(), JSON.stringify(presets));
-      renderPresets();
-      closeModal();
-    }});
-
-    // Event Listeners
-    selectStation.addEventListener('change', () => {{
-      updateDirectionUI();
-      fetchDepartures();
-    }});
-    selectDestStation.addEventListener('change', () => {{
-      updateDirectionUI();
-      fetchDepartures();
-    }});
-    inputTime.addEventListener('change', fetchDepartures);
-    btnUseNow.addEventListener('click', () => {{
-      setCurrentTime();
-      fetchDepartures();
-    }});
-    btnPinPrefs.addEventListener('click', savePreferences);
-    btnRefresh.addEventListener('click', fetchDepartures);
-
-    calcStart.addEventListener('change', calculateTrip);
-    calcEnd.addEventListener('change', calculateTrip);
-
-    // Calculation triggers ONLY via btnCalcTransfer to prevent server overload and allow calm selection
-    btnCalcTransfer.addEventListener('click', calculateSmartTransfer);
-
-    // Initial Execution
-    switchNetworkMode(currentMode);
-    populateTransferDropdowns();
-    calculateSmartTransfer();
   </script>
 </body>
 </html>

@@ -63,9 +63,9 @@ METRO_STATIONS = [
     "interchange": "LRT + قطار السويس + السوبرجيت",
     "pos": 0,
     "aliases": [
+      "عدلي منصور",
       "عدلي",
       "عدلى",
-      "عدلي منصور",
       "منصور"
     ]
   },
@@ -86,8 +86,8 @@ METRO_STATIONS = [
     "order": 3,
     "pos": 2,
     "aliases": [
-      "عمر بن الخطاب",
       "عمر",
+      "عمر بن الخطاب",
       "ابن الخطاب"
     ]
   },
@@ -108,8 +108,8 @@ METRO_STATIONS = [
     "order": 5,
     "pos": 4,
     "aliases": [
-      "هشام",
       "بركات",
+      "هشام",
       "هشام بركات"
     ]
   },
@@ -132,8 +132,8 @@ METRO_STATIONS = [
     "pos": 6,
     "aliases": [
       "نادي الشمس",
-      "نادى الشمس",
-      "الشمس"
+      "الشمس",
+      "نادى الشمس"
     ]
   },
   {
@@ -155,9 +155,9 @@ METRO_STATIONS = [
     "order": 9,
     "pos": 8,
     "aliases": [
+      "هليوبولس",
       "هليوبوليس",
-      "ميدان هليوبوليس",
-      "هليوبولس"
+      "ميدان هليوبوليس"
     ]
   },
   {
@@ -188,9 +188,9 @@ METRO_STATIONS = [
     "order": 12,
     "pos": 11,
     "aliases": [
-      "بنات",
+      "كلية البنات",
       "كليه البنات",
-      "كلية البنات"
+      "بنات"
     ]
   },
   {
@@ -212,8 +212,8 @@ METRO_STATIONS = [
     "pos": 13,
     "aliases": [
       "المعارض",
-      "أرض المعارض",
-      "ارض المعارض"
+      "ارض المعارض",
+      "أرض المعارض"
     ]
   },
   {
@@ -223,8 +223,8 @@ METRO_STATIONS = [
     "order": 15,
     "pos": 14,
     "aliases": [
-      "العباسيه",
-      "العباسية"
+      "العباسية",
+      "العباسيه"
     ]
   },
   {
@@ -234,8 +234,8 @@ METRO_STATIONS = [
     "order": 16,
     "pos": 15,
     "aliases": [
-      "عبده",
       "عبده باشا",
+      "عبده",
       "باشا"
     ]
   },
@@ -257,8 +257,8 @@ METRO_STATIONS = [
     "pos": 17,
     "aliases": [
       "الشعرية",
-      "باب الشعريه",
-      "باب الشعرية"
+      "باب الشعرية",
+      "باب الشعريه"
     ]
   },
   {
@@ -269,8 +269,8 @@ METRO_STATIONS = [
     "interchange": "الخط الثاني (شبرا - المنيب)",
     "pos": 18,
     "aliases": [
-      "العتبه",
-      "العتبة"
+      "العتبة",
+      "العتبه"
     ]
   },
   {
@@ -305,11 +305,11 @@ METRO_STATIONS = [
     "order": 22,
     "pos": 21,
     "aliases": [
-      "صفاء حجازي (الزمالك)",
       "صفاء",
-      "زمالك",
       "الزمالك",
-      "صفاء حجازي"
+      "زمالك",
+      "صفاء حجازي",
+      "صفاء حجازي (الزمالك)"
     ]
   },
   {
@@ -320,8 +320,8 @@ METRO_STATIONS = [
     "interchange": "نقطة التفرع لفرعي روض الفرج وجامعة القاهرة",
     "pos": 22,
     "aliases": [
-      "الكيت كات",
-      "كيت كات"
+      "كيت كات",
+      "الكيت كات"
     ]
   },
   {
@@ -341,8 +341,8 @@ METRO_STATIONS = [
     "order": 25,
     "pos": 24,
     "aliases": [
-      "امبابه",
-      "إمبابة"
+      "إمبابة",
+      "امبابه"
     ]
   },
   {
@@ -362,8 +362,8 @@ METRO_STATIONS = [
     "order": 27,
     "pos": 26,
     "aliases": [
-      "القومية العربية",
       "القوميه",
+      "القومية العربية",
       "القومية"
     ]
   },
@@ -375,9 +375,9 @@ METRO_STATIONS = [
     "interchange": "الأتوبيس الترددي BRT",
     "pos": 27,
     "aliases": [
-      "الطريق الدائري",
+      "الدائرى",
       "الدائري",
-      "الدائرى"
+      "الطريق الدائري"
     ]
   },
   {
@@ -387,9 +387,9 @@ METRO_STATIONS = [
     "order": 29,
     "pos": 28,
     "aliases": [
+      "روض الفرج",
       "الفرّاج",
-      "محور روض الفرج",
-      "روض الفرج"
+      "محور روض الفرج"
     ]
   },
   {
@@ -399,8 +399,8 @@ METRO_STATIONS = [
     "order": 24,
     "pos": 31,
     "aliases": [
-      "التوفيقيه",
-      "التوفيقية"
+      "التوفيقية",
+      "التوفيقيه"
     ]
   },
   {
@@ -421,10 +421,10 @@ METRO_STATIONS = [
     "order": 26,
     "pos": 33,
     "aliases": [
-      "جامعة الدول العربية",
-      "جامعه الدول",
       "الدول",
-      "جامعة الدول"
+      "جامعه الدول",
+      "جامعة الدول",
+      "جامعة الدول العربية"
     ]
   },
   {
@@ -434,8 +434,8 @@ METRO_STATIONS = [
     "order": 27,
     "pos": 34,
     "aliases": [
-      "بولاق الدكرور",
-      "بولاق"
+      "بولاق",
+      "بولاق الدكرور"
     ]
   },
   {
@@ -447,8 +447,8 @@ METRO_STATIONS = [
     "pos": 35,
     "aliases": [
       "جامعة القاهرة",
-      "جامعه القاهره",
-      "الجامعة"
+      "الجامعة",
+      "جامعه القاهره"
     ]
   }
 ]
@@ -539,22 +539,22 @@ def render_trip_card_image(title, subtitle, lines, output_path):
         doc = pymupdf.open()
         h_box = max(400, 180 + len(lines) * 90)
         page = doc.new_page(width=500, height=h_box)
-        page.draw_rect(pymupdf.Rect(0, 0, 500, h_box), color=(0.06, 0.09, 0.16), fill=(0.06, 0.09, 0.16))
-        page.draw_rect(pymupdf.Rect(10, 10, 490, h_box - 10), color=(0.06, 0.73, 0.51), width=2)
+        page.draw_rect(pymupdf.Rect(0, 0, 500, h_box), color=(1, 1, 1), fill=(1, 1, 1))
+        page.draw_rect(pymupdf.Rect(6, 6, 494, h_box - 6), color=(0.88, 0.91, 0.94), width=1.5)
 
-        boxes_html = "".join([f'<div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 13.5px; color: #f1f5f9; line-height: 1.6;">{line}</div>' for line in lines])
+        boxes_html = "".join([f'<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 13.5px; color: #0f172a; line-height: 1.6;">{line}</div>' for line in lines])
         html_content = f"""
-        <div style="font-family: sans-serif; direction: rtl; text-align: right; color: #f8fafc; padding: 22px;">
-          <h2 style="color: #34d399; margin: 0 0 6px 0; font-size: 20px;">{title}</h2>
-          <p style="color: #94a3b8; margin: 0 0 16px 0; font-size: 13.5px;">{subtitle}</p>
-          <hr style="border: none; border-top: 1px solid #334155; margin-bottom: 16px;" />
+        <div style="font-family: sans-serif; direction: rtl; text-align: right; color: #0f172a; padding: 22px;">
+          <h2 style="color: #0f766e; margin: 0 0 6px 0; font-size: 20px;">{title}</h2>
+          <p style="color: #64748b; margin: 0 0 16px 0; font-size: 13.5px;">{subtitle}</p>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 16px;" />
           {boxes_html}
-          <div style="text-align: center; margin-top: 20px; color: #10b981; font-weight: bold; font-size: 12px;">
-            سيرفر RATP Dev الرسمي • قطار العاصمة والمترو
+          <div style="text-align: center; margin-top: 20px; color: #059669; font-weight: bold; font-size: 12px;">
+            سيرفر RATP Dev الرسمي • قطار العاصمة ومترو الخط الثالث الأخضر
           </div>
         </div>
         """
-        page.insert_htmlbox(pymupdf.Rect(18, 18, 482, h_box - 18), html_content)
+        page.insert_htmlbox(pymupdf.Rect(14, 14, 486, h_box - 14), html_content)
         pix = page.get_pixmap(dpi=150)
         pix.save(output_path)
         doc.close()
@@ -572,18 +572,19 @@ def render_smart_transfer_card_image(info, output_path):
         height = 430
         page = doc.new_page(width=width, height=height)
 
-        # Background
-        page.draw_rect(pymupdf.Rect(0, 0, width, height), color=(0.04, 0.07, 0.14), fill=(0.04, 0.07, 0.14))
-        page.draw_rect(pymupdf.Rect(6, 6, width - 6, height - 6), color=(0.12, 0.22, 0.38), width=1.5)
+        # Light Clean Background
+        page.draw_rect(pymupdf.Rect(0, 0, width, height), color=(1, 1, 1), fill=(1, 1, 1))
+        page.draw_rect(pymupdf.Rect(4, 4, width - 4, height - 4), color=(0.88, 0.91, 0.94), width=1.5)
 
         is_m2l = info.get("direction") == "metro_to_lrt"
         start_name = info.get("start_name", "")
         dest_name = info.get("dest_name", "")
         best_diff = info.get("best_diff", 0)
-        
+
         status_text = "✅ ستلحق القطار بكل راحة وأمان" if best_diff >= 4 else ("⚠️ الوقت ضيق جداً (تبديل سريع)" if best_diff >= 0 else "❌ سيفوتك القطار الأول")
-        status_bg = "#064e3b" if best_diff >= 4 else ("#78350f" if best_diff >= 0 else "#881337")
-        status_border = "#10b981" if best_diff >= 4 else ("#f59e0b" if best_diff >= 0 else "#f43f5e")
+        status_bg = "#ecfdf5" if best_diff >= 4 else ("#fffbeb" if best_diff >= 0 else "#fef2f2")
+        status_border = "#10b981" if best_diff >= 4 else ("#f59e0b" if best_diff >= 0 else "#ef4444")
+        status_color = "#065f46" if best_diff >= 4 else ("#92400e" if best_diff >= 0 else "#991b1b")
 
         leg1_title = "1. ركوب مترو الخط الثالث الأخضر" if is_m2l else "1. ركوب قطار العاصمة الكهربائي"
         leg1_dep = info.get("leg1_dep", "")
@@ -610,106 +611,102 @@ def render_smart_transfer_card_image(info, output_path):
         next_tip = f"💡 القطار البديل التالي يتحرك من رصيف عدلي منصور الساعة <b>{next_time}</b>."
 
         html = f"""
-        <div style="font-family: sans-serif; direction: rtl; text-align: right; color: #f8fafc; padding: 12px 14px;">
-          <!-- Header: Left Cell is Badge, Right Cell is Route -->
-          <table style="width: 100%; border-bottom: 1px solid #1e293b; padding-bottom: 8px; margin-bottom: 8px;">
+        <div style="font-family: sans-serif; direction: rtl; text-align: right; color: #0f172a; padding: 12px 14px;">
+          <!-- Header: Left is Status Badge, Right is Route -->
+          <table style="width: 100%; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;">
             <tr>
               <td style="width: 40%; text-align: left; vertical-align: middle;">
-                <span style="background: {status_bg}; border: 1px solid {status_border}; color: #ffffff; font-weight: bold; font-size: 13.5px; padding: 5px 14px; border-radius: 8px;">
+                <span style="background: {status_bg}; border: 1px solid {status_border}; color: {status_color}; font-weight: bold; font-size: 13px; padding: 5px 12px; border-radius: 8px;">
                   {status_text}
                 </span>
               </td>
-              <td style="width: 60%; text-align: right; vertical-align: middle; color: #cbd5e1; font-size: 13.5px;">
-                المسار الكلي: من <b style="color: #ffffff;">{start_name}</b> إلى <b style="color: #ffffff;">{dest_name}</b>
+              <td style="width: 60%; text-align: right; vertical-align: middle; color: #475569; font-size: 13px;">
+                المسار الكلي: من <b style="color: #0f172a;">{start_name}</b> إلى <b style="color: #0f172a;">{dest_name}</b>
               </td>
             </tr>
           </table>
 
-          <!-- 4 Step Cards (Right-to-Left: Cell 1 is Right = Step 1 / Step 3, Cell 2 is Left = Step 2 / Step 4) -->
+          <!-- 4 Step Cards (Right-to-Left: Left Cell in MuPDF is Step 2 / 4, Right Cell is Step 1 / 3) -->
           <table style="width: 100%; border-spacing: 8px; margin-bottom: 4px;">
             <tr>
-              <!-- Right Cell: Step 1 (First in DOM = Right in RTL) -->
-              <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
-                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">{leg1_title}</div>
-                <div style="color: #38bdf8; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{leg1_dep}</div>
-                <div style="color: #cbd5e1; font-size: 11.5px; border-top: 1px solid #1e293b; padding-top: 4px;">
-                  <b>{start_name}</b> (محطة الانطلاق الأولى)
-                </div>
-              </td>
-              <!-- Left Cell: Step 2 (Second in DOM = Left in RTL) -->
-              <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
-                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">2. الوصول لعدلي منصور المركزية</div>
-                <div style="color: #38bdf8; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{adly_arr}</div>
-                <div style="color: #cbd5e1; font-size: 11.5px; border-top: 1px solid #1e293b; padding-top: 4px;">
+              <!-- Left Cell: Step 2 -->
+              <td style="width: 50%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
+                <div style="color: #64748b; font-size: 11.5px; font-weight: bold;">2. الوصول لعدلي منصور المركزية</div>
+                <div style="color: #0284c7; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{adly_arr}</div>
+                <div style="color: #475569; font-size: 11.5px; border-top: 1px solid #e2e8f0; padding-top: 4px;">
                   زمن الرحلة الأولى: {leg1_ride} دقيقة
                 </div>
               </td>
-            </tr>
-            <tr>
-              <!-- Right Cell: Step 3 (First in DOM = Right in RTL) -->
-              <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
-                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">{leg2_title}</div>
-                <div style="color: #fbbf24; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{leg2_dep}</div>
-                <div style="color: #fde68a; font-size: 11.5px; border-top: 1px solid #1e293b; padding-top: 4px;">
-                  جاهز بالرصيف بعد التبديل: <b>{ready_time}</b>
+              <!-- Right Cell: Step 1 -->
+              <td style="width: 50%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
+                <div style="color: #64748b; font-size: 11.5px; font-weight: bold;">{leg1_title}</div>
+                <div style="color: #0284c7; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{leg1_dep}</div>
+                <div style="color: #475569; font-size: 11.5px; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+                  <b>{start_name}</b> (محطة الانطلاق الأولى)
                 </div>
               </td>
-              <!-- Left Cell: Step 4 (Second in DOM = Left in RTL) -->
-              <td style="width: 50%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
-                <div style="color: #94a3b8; font-size: 11.5px; font-weight: bold;">4. الوصول لوجهتك النهائية</div>
-                <div style="color: #34d399; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{final_arr}</div>
-                <div style="color: #cbd5e1; font-size: 11.5px; border-top: 1px solid #1e293b; padding-top: 4px;">
+            </tr>
+            <tr>
+              <!-- Left Cell: Step 4 -->
+              <td style="width: 50%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
+                <div style="color: #64748b; font-size: 11.5px; font-weight: bold;">4. الوصول لوجهتك النهائية</div>
+                <div style="color: #059669; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{final_arr}</div>
+                <div style="color: #475569; font-size: 11.5px; border-top: 1px solid #e2e8f0; padding-top: 4px;">
                   <b>{dest_name}</b> (زمن الرحلة الثانية: {leg2_ride} د)
                 </div>
               </td>
+              <!-- Right Cell: Step 3 -->
+              <td style="width: 50%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; vertical-align: top;">
+                <div style="color: #64748b; font-size: 11.5px; font-weight: bold;">{leg2_title}</div>
+                <div style="color: #d97706; font-size: 24px; font-weight: bold; font-family: monospace; margin: 3px 0;">{leg2_dep}</div>
+                <div style="color: #b45309; font-size: 11.5px; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+                  جاهز بالرصيف بعد التبديل: <b>{ready_time}</b>
+                </div>
+              </td>
             </tr>
           </table>
 
-          <!-- 3 Stats Boxes: Cell 1 Right (Line 1), Cell 2 Middle (Line 2), Cell 3 Left (Total Duration) -->
+          <!-- 3 Stats Boxes: Left is Total Duration, Middle is Line 2, Right is Line 1 -->
           <table style="width: 100%; border-spacing: 8px; margin-bottom: 6px;">
             <tr>
-              <!-- Right in RTL: Line 1 Stations -->
-              <td style="width: 33.3%; background: #134e4a; border: 1px solid #0d9488; border-radius: 10px; padding: 8px 10px;">
-                <div style="color: #ccfbf1; font-size: 11px; font-weight: bold;">{stops1_lbl}</div>
-                <div style="color: #ffffff; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{stops1} محطة</div>
-                <div style="color: #99f6e4; font-size: 9px;">{note1}</div>
+              <!-- Left: Total Duration -->
+              <td style="width: 33.3%; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 8px 10px;">
+                <div style="color: #92400e; font-size: 11px; font-weight: bold;">إجمالي زمن الرحلة المشتركة</div>
+                <div style="color: #78350f; font-size: 20px; font-weight: bold; font-family: monospace; margin: 2px 0;">{total_time} دقيقة</div>
+                <div style="color: #b45309; font-size: 9.5px;">شاملاً الركوب والتبديل والوصول</div>
               </td>
-              <!-- Middle in RTL: Line 2 Stations -->
-              <td style="width: 33.3%; background: #1e1b4b; border: 1px solid #4338ca; border-radius: 10px; padding: 8px 10px;">
-                <div style="color: #c7d2fe; font-size: 11px; font-weight: bold;">{stops2_lbl}</div>
-                <div style="color: #ffffff; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{stops2} محطة</div>
-                <div style="color: #a5b4fc; font-size: 9px;">{note2}</div>
+              <!-- Middle: Line 2 Stations -->
+              <td style="width: 33.3%; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 8px 10px;">
+                <div style="color: #166534; font-size: 11px; font-weight: bold;">{stops2_lbl}</div>
+                <div style="color: #14532d; font-size: 20px; font-weight: bold; font-family: monospace; margin: 2px 0;">{stops2} محطة</div>
+                <div style="color: #15803d; font-size: 9.5px;">{note2}</div>
               </td>
-              <!-- Left in RTL: Total Duration -->
-              <td style="width: 33.3%; background: #713f12; border: 1px solid #d97706; border-radius: 10px; padding: 8px 10px;">
-                <div style="color: #fef3c7; font-size: 11px; font-weight: bold;">إجمالي زمن الرحلة المشتركة</div>
-                <div style="color: #fde047; font-size: 18px; font-weight: bold; font-family: monospace; margin: 2px 0;">{total_time} دقيقة</div>
-                <div style="color: #fef08a; font-size: 9px;">شاملاً الركوب والتبديل والوصول</div>
+              <!-- Right: Line 1 Stations -->
+              <td style="width: 33.3%; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 8px 10px;">
+                <div style="color: #115e59; font-size: 11px; font-weight: bold;">{stops1_lbl}</div>
+                <div style="color: #134e4a; font-size: 20px; font-weight: bold; font-family: monospace; margin: 2px 0;">{stops1} محطة</div>
+                <div style="color: #0f766e; font-size: 9.5px;">{note1}</div>
               </td>
             </tr>
           </table>
 
-          <!-- Info Tip Box -->
-          <div style="background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; font-size: 11.5px; line-height: 1.5;">
-            <div>ℹ️ {advice_text}</div>
-            <div style="color: #94a3b8; margin-top: 3px;">{next_tip}</div>
+          <!-- Advice Box -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; margin-bottom: 6px; font-size: 11.5px; color: #1e293b;">
+            ℹ️ {advice_text} &nbsp;|&nbsp; {next_tip}
           </div>
 
-          <!-- Footer: Cell 1 Left (URL), Cell 2 Right (Title) -->
-          <table style="width: 100%; border-top: 1px solid #1e293b; padding-top: 4px;">
+          <!-- Footer -->
+          <table style="width: 100%; border-top: 1px solid #e2e8f0; padding-top: 5px;">
             <tr>
-              <td style="width: 35%; text-align: left; color: #64748b; font-size: 10px; font-family: monospace;">
-                capitaltrain.tafawuq-edu.site
-              </td>
-              <td style="width: 65%; text-align: right; color: #10b981; font-size: 10px; font-weight: bold;">
-                شبكة النقل الذكية: قطار العاصمة الكهربائي ومترو الخط الثالث
-              </td>
+              <td style="width: 40%; text-align: left; font-size: 10px; color: #94a3b8; font-family: monospace;">capitaltrain.tafawuq-edu.site</td>
+              <td style="width: 60%; text-align: right; font-size: 10.5px; color: #64748b;">شبكة النقل الذكية: قطار العاصمة ومترو الخط الثالث الأخضر</td>
             </tr>
           </table>
         </div>
         """
 
-        page.insert_htmlbox(pymupdf.Rect(6, 6, width - 6, height - 6), html)
+        rect = pymupdf.Rect(0, 0, width, height)
+        page.insert_htmlbox(rect, html)
         pix = page.get_pixmap(dpi=150)
         pix.save(output_path)
         doc.close()
@@ -784,26 +781,37 @@ def calculate_smart_transfer_info(direction, start_id, dest_id, timing_mode="now
         adly_arrival_mins = leg1_dep_mins + leg1_ride
         ready_mins = adly_arrival_mins + walk_buffer
 
-        schedules = fetch_live_schedule_from_mobility_cairo("139886", "0", network='lrt')
-        best = None
-        nxt = None
+        # Query LRT from Adly Mansour (stop 139886, dir 0) at arrival time
+        qh = (ready_mins // 60) % 24
+        qm = ready_mins % 60
+        target_time_str = f"{qh:02d}:{qm:02d}:00"
+        schedules = fetch_live_schedule_from_mobility_cairo("139886", "0", network='lrt', query_time_str=target_time_str)
+
+        # Sort valid schedules chronologically
+        valid_s = []
         for s in schedules:
             dep = s.get("DepTime", "")
             hhmm = dep.split(" ")[1] if " " in dep else dep
             if ":" in hhmm:
                 p = hhmm.split(":")
                 tm = int(p[0]) * 60 + int(p[1])
-                diff = tm - ready_mins
-                if diff >= 0 and not best:
-                    best = {"time": hhmm, "diff": diff, "tm": tm}
-                elif diff >= 0 and best and not nxt:
-                    nxt = {"time": hhmm, "diff": diff, "tm": tm}
-                    break
+                valid_s.append({"time": hhmm, "tm": tm})
+        valid_s.sort(key=lambda x: x["tm"])
+
+        best = None
+        nxt = None
+        for item in valid_s:
+            diff = item["tm"] - ready_mins
+            if diff >= 0 and not best:
+                best = {"time": item["time"], "diff": diff, "tm": item["tm"]}
+            elif diff >= 0 and best and not nxt:
+                nxt = {"time": item["time"], "diff": diff, "tm": item["tm"]}
+                break
 
         if not best:
-            fb_tm = ready_mins + 8
-            best = {"time": f"{(fb_tm//60)%24:02d}:{fb_tm%60:02d}", "diff": 8, "tm": fb_tm}
-            nxt = {"time": f"{((fb_tm+15)//60)%24:02d}:{(fb_tm+15)%60:02d}", "diff": 23, "tm": fb_tm + 15}
+            fb_tm = ready_mins + 4
+            best = {"time": f"{(fb_tm//60)%24:02d}:{fb_tm%60:02d}", "diff": 4, "tm": fb_tm}
+            nxt = {"time": f"{((fb_tm+12)//60)%24:02d}:{(fb_tm+12)%60:02d}", "diff": 16, "tm": fb_tm + 12}
 
         leg2_ride = LRT_FROM_ADLY_MINS.get(lrt_dest_id, 20)
         final_arr_mins = best["tm"] + leg2_ride
@@ -841,21 +849,31 @@ def calculate_smart_transfer_info(direction, start_id, dest_id, timing_mode="now
         adly_arrival_mins = leg1_dep_mins + leg1_ride
         ready_mins = adly_arrival_mins + walk_buffer
 
-        schedules = fetch_live_schedule_from_mobility_cairo("139908", "0", network='metro')
-        best = None
-        nxt = None
+        # Query Metro from Adly Mansour (stop 139886, dir 0) at arrival time
+        qh = (ready_mins // 60) % 24
+        qm = ready_mins % 60
+        target_time_str = f"{qh:02d}:{qm:02d}:00"
+        schedules = fetch_live_schedule_from_mobility_cairo("139886", "0", network='metro', query_time_str=target_time_str)
+
+        valid_s = []
         for s in schedules:
             dep = s.get("DepTime", "")
             hhmm = dep.split(" ")[1] if " " in dep else dep
             if ":" in hhmm:
                 p = hhmm.split(":")
                 tm = int(p[0]) * 60 + int(p[1])
-                diff = tm - ready_mins
-                if diff >= 0 and not best:
-                    best = {"time": hhmm, "diff": diff, "tm": tm}
-                elif diff >= 0 and best and not nxt:
-                    nxt = {"time": hhmm, "diff": diff, "tm": tm}
-                    break
+                valid_s.append({"time": hhmm, "tm": tm})
+        valid_s.sort(key=lambda x: x["tm"])
+
+        best = None
+        nxt = None
+        for item in valid_s:
+            diff = item["tm"] - ready_mins
+            if diff >= 0 and not best:
+                best = {"time": item["time"], "diff": diff, "tm": item["tm"]}
+            elif diff >= 0 and best and not nxt:
+                nxt = {"time": item["time"], "diff": diff, "tm": item["tm"]}
+                break
 
         if not best:
             fb_tm = ready_mins + 4
@@ -1014,10 +1032,10 @@ def transcribe_audio_whisper(wav_path):
     res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
     return res.stdout.strip() if res.returncode == 0 else ""
 
-def fetch_live_schedule_from_mobility_cairo(stop_id, direction_code, network='lrt'):
+def fetch_live_schedule_from_mobility_cairo(stop_id, direction_code, network='lrt', query_time_str=None):
     now = get_cairo_now()
     date_str = now.strftime("%Y-%m-%d")
-    time_str = now.strftime("%H:%M:%S")
+    time_str = query_time_str if query_time_str else now.strftime("%H:%M:%S")
 
     url = (
         f"{MOBILITY_API}/stop-stoptimes-discovery?"
@@ -1339,8 +1357,8 @@ def main():
                     if data == "transfer_direction_menu" or data == "transfer_metro_select":
                         kb = {
                             "inline_keyboard": [
-                                [{"text": "🚇 من مترو الخط الثالث الأخضر ⬅️ قطار العاصمة 🚆", "callback_data": "tf_dir:metro_to_lrt"}],
-                                [{"text": "🚆 من قطار العاصمة ⬅️ مترو الخط الثالث الأخضر 🚇", "callback_data": "tf_dir:lrt_to_metro"}],
+                                [{"text": "🚇 من مترو الخط الثالث الأخضر ⬅️ إلى قطار العاصمة 🚆", "callback_data": "tf_dir:metro_to_lrt"}],
+                                [{"text": "🚆 من قطار العاصمة ⬅️ إلى مترو الخط الثالث الأخضر 🚇", "callback_data": "tf_dir:lrt_to_metro"}],
                                 [{"text": "🏠 القائمة الرئيسية", "callback_data": "main_menu"}]
                             ]
                         }
